@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  kiosklayso-web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: kiosklayso-web
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      # Sửa đường dẫn CSDL tương ứng trên server của bạn
+      - DATABASE_URL=postgresql://postgres:password123@host.docker.internal:5432/kiosklayso?schema=public
+    # Nếu PostgreSQL cũng chạy bằng Docker trên server thì kết nối qua cùng network
+    # networks:
+    #   - your_app_network
+
+# networks:
+#   your_app_network:
+#     external: true
