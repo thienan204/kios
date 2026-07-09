@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Table, Button, Modal, Form, Input, TimePicker, message, Popconfirm, Typography, Tooltip, Tag } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, UnlockOutlined, LockOutlined, CheckCircleOutlined } from '@ant-design/icons';
+import { Table, Button, Modal, Form, Input, InputNumber, TimePicker, message, Popconfirm, Typography, Tooltip, Tag } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined, UnlockOutlined, CheckCircleOutlined, FastForwardOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 
 export default function AreasPage() {
@@ -11,6 +11,12 @@ export default function AreasPage() {
   const [unlocking, setUnlocking] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
+  
+  const [isJumpModalVisible, setIsJumpModalVisible] = useState(false);
+  const [jumpAreaId, setJumpAreaId] = useState<number | null>(null);
+  const [jumpNextNumber, setJumpNextNumber] = useState<number | null>(null);
+  const [isJumping, setIsJumping] = useState(false);
+
   const [form] = Form.useForm();
 
   const fetchAreas = async () => {
@@ -80,6 +86,38 @@ export default function AreasPage() {
       message.error('Lỗi kết nối');
     } finally {
       setUnlocking(false);
+    }
+  };
+
+  const handleOpenJump = (id: number) => {
+    setJumpAreaId(id);
+    setJumpNextNumber(null);
+    setIsJumpModalVisible(true);
+  };
+
+  const handleJumpSubmit = async () => {
+    if (!jumpAreaId || !jumpNextNumber) {
+      message.error('Vui lòng nhập số');
+      return;
+    }
+    setIsJumping(true);
+    try {
+      const res = await fetch(`/api/areas/${jumpAreaId}/jump`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nextNumber: jumpNextNumber })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        message.success(data.message);
+        setIsJumpModalVisible(false);
+      } else {
+        message.error(data.error || 'Có lỗi xảy ra');
+      }
+    } catch (e) {
+      message.error('Lỗi kết nối máy chủ');
+    } finally {
+      setIsJumping(false);
     }
   };
 
@@ -199,6 +237,9 @@ export default function AreasPage() {
       key: 'actions',
       render: (_: any, record: any) => (
         <div className="flex gap-2">
+          <Tooltip title="Nhảy số Kiosk">
+            <Button icon={<FastForwardOutlined />} onClick={() => handleOpenJump(record.id)} className="text-indigo-600 border-indigo-200 hover:bg-indigo-50" />
+          </Tooltip>
           <Button icon={<EditOutlined />} onClick={() => handleEdit(record)} />
           <Popconfirm
             title="Bạn có chắc chắn muốn xóa khu vực này?"
@@ -279,6 +320,35 @@ export default function AreasPage() {
             <Button type="primary" htmlType="submit">Lưu</Button>
           </Form.Item>
         </Form>
+      </Modal>
+
+      <Modal
+        title={
+          <div className="flex items-center gap-2 text-indigo-700">
+            <FastForwardOutlined /> Cấu hình Nhảy số Kiosk
+          </div>
+        }
+        open={isJumpModalVisible}
+        onCancel={() => setIsJumpModalVisible(false)}
+        footer={[
+          <Button key="cancel" onClick={() => setIsJumpModalVisible(false)}>Hủy</Button>,
+          <Button key="submit" type="primary" className="bg-indigo-600" loading={isJumping} onClick={handleJumpSubmit}>Xác nhận Nhảy số</Button>
+        ]}
+      >
+        <div className="py-4 text-gray-600">
+          <p className="mb-4">Nếu Kiosk đang in số bị lệch hoặc bạn muốn bỏ qua các số đầu, bạn có thể thiết lập số tiếp theo Kiosk sẽ in ra tại đây.</p>
+          <div className="flex items-center gap-3">
+            <span className="font-semibold">Số tiếp theo sẽ in:</span>
+            <InputNumber 
+              min={1} 
+              value={jumpNextNumber} 
+              onChange={(val) => setJumpNextNumber(val)} 
+              placeholder="VD: 50" 
+              className="w-32"
+              size="large"
+            />
+          </div>
+        </div>
       </Modal>
     </div>
   );

@@ -14,7 +14,7 @@ declare global {
 }
 
 let currentDeskId: string | null = localStorage.getItem('kiosk_desk_id');
-let serverUrl: string = localStorage.getItem('kiosk_server_url') || 'http://localhost:3000';
+let serverUrl: string = import.meta.env.VITE_SERVER_URL || localStorage.getItem('kiosk_server_url') || 'http://localhost:3000';
 
 const appDiv = document.querySelector<HTMLDivElement>('#app')!;
 
@@ -44,8 +44,8 @@ function renderConfig() {
       
       <label class="block text-sm font-semibold mb-1">URL Máy chủ (Kèm port):</label>
       <div class="flex gap-2 mb-4">
-        <input id="serverUrlInput" type="text" value="${serverUrl}" class="flex-1 p-2 border rounded focus:outline-blue-500" />
-        <button id="loadDesksBtn" class="bg-gray-200 hover:bg-gray-300 text-sm font-semibold px-3 rounded border transition-colors cursor-pointer">Kết nối</button>
+        <input id="serverUrlInput" type="text" value="${serverUrl}" class="flex-1 p-2 border rounded bg-gray-200 text-gray-500 cursor-not-allowed focus:outline-none" readonly title="Cấu hình hệ thống mặc định (Không thể sửa)" />
+        <button id="loadDesksBtn" class="bg-blue-100 hover:bg-blue-200 text-blue-700 text-sm font-semibold px-3 rounded border border-blue-300 transition-colors cursor-pointer">Tải lại</button>
       </div>
       
       <label class="block text-sm font-semibold mb-1">Chọn Bàn tiếp đón:</label>
@@ -147,11 +147,21 @@ function renderApp() {
 
   appDiv.innerHTML = `
     <div class="h-full flex flex-col bg-slate-50 border-4 border-slate-300 rounded-xl overflow-hidden shadow-2xl relative">
-      <div class="bg-blue-800 text-white p-3 text-center flex justify-between items-center shadow-md z-10">
-        <span class="font-bold text-sm truncate pr-2" title="${localStorage.getItem('kiosk_desk_name') || `BÀN SỐ ${currentDeskId}`}">
+      <div class="bg-blue-800 text-white p-3 flex justify-between items-center shadow-md z-10 relative">
+        <span class="font-bold text-sm truncate pr-2 flex-1 text-left" title="${localStorage.getItem('kiosk_desk_name') || `BÀN SỐ ${currentDeskId}`}">
           ${localStorage.getItem('kiosk_desk_name') || `BÀN SỐ ${currentDeskId}`}
         </span>
-        <button id="configBtn" class="text-xs bg-white text-blue-800 px-2 py-1 rounded hover:bg-gray-200 transition-colors">Đổi</button>
+        <div class="flex gap-2">
+          <button id="toggleSpecificBtn" class="text-xs bg-blue-600 border border-blue-500 text-white px-2 py-1 rounded hover:bg-blue-500 transition-colors" title="Gọi số chỉ định thủ công">+ Số</button>
+          <button id="configBtn" class="text-xs bg-white text-blue-800 px-2 py-1 rounded hover:bg-gray-200 transition-colors">Đổi</button>
+        </div>
+      </div>
+      
+      <div id="specificCallContainer" class="hidden flex gap-2 w-full p-2 items-center bg-blue-50 border-b border-blue-200 shadow-inner z-0">
+        <input type="number" id="specificNumberInput" placeholder="Số..." class="w-16 p-1.5 rounded border border-blue-300 text-center font-bold text-blue-900 focus:outline-blue-500 text-sm" min="1" />
+        <button id="callSpecificBtn" class="flex-1 bg-gradient-to-b from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 active:from-blue-700 active:to-blue-800 text-white font-bold py-1.5 rounded shadow-sm active:translate-y-0.5 transition-all text-xs">
+          GỌI SỐ NÀY
+        </button>
       </div>
       
       <div class="flex-1 flex flex-col items-center justify-center p-4 relative">
@@ -176,7 +186,8 @@ function renderApp() {
             <span class="block text-[9px] font-normal opacity-80">(${sc.skip})</span>
           </button>
         </div>
-        
+
+
         <button id="pauseBtn" class="w-full mt-3 bg-gray-200 hover:bg-gray-300 active:bg-gray-400 text-gray-700 font-bold py-2 rounded-lg border border-gray-400 shadow-sm active:translate-y-1 transition-all text-xs">
           KẾT THÚC / DỪNG TIẾP ĐÓN (${sc.pause})
         </button>
@@ -198,6 +209,20 @@ function renderApp() {
 
   const skipBtn = document.getElementById('skipBtn') as HTMLButtonElement;
   skipBtn?.addEventListener('click', skipTicket);
+
+  const toggleSpecificBtn = document.getElementById('toggleSpecificBtn') as HTMLButtonElement;
+  const specificCallContainer = document.getElementById('specificCallContainer') as HTMLDivElement;
+  const specificNumberInput = document.getElementById('specificNumberInput') as HTMLInputElement;
+
+  toggleSpecificBtn?.addEventListener('click', () => {
+    specificCallContainer.classList.toggle('hidden');
+    if (!specificCallContainer.classList.contains('hidden')) {
+      specificNumberInput.focus();
+    }
+  });
+
+  const callSpecificBtn = document.getElementById('callSpecificBtn') as HTMLButtonElement;
+  callSpecificBtn?.addEventListener('click', callSpecificTicket);
 
   const pauseBtn = document.getElementById('pauseBtn') as HTMLButtonElement;
   pauseBtn?.addEventListener('click', pauseTicket);
@@ -278,6 +303,58 @@ async function skipTicket() {
     } else {
       statusMsg.textContent = data.message || data.error;
       statusMsg.className = "mt-4 text-sm font-semibold text-center h-5 text-orange-500";
+    }
+  } catch (err) {
+    statusMsg.textContent = 'Lỗi kết nối máy chủ';
+    statusMsg.className = "mt-4 text-sm font-semibold text-center h-5 text-red-500";
+  } finally {
+    isCalling = false;
+    setTimeout(() => { statusMsg.textContent = ''; }, 3000);
+  }
+}
+
+async function callSpecificTicket() {
+  if (isCalling) return;
+  const input = document.getElementById('specificNumberInput') as HTMLInputElement;
+  const num = input?.value;
+  if (!num) return;
+
+  isCalling = true;
+  
+  const statusMsg = document.getElementById('statusMsg')!;
+  const currentNumberEl = document.getElementById('currentNumber')!;
+  
+  statusMsg.textContent = 'Đang gọi số chỉ định...';
+  statusMsg.className = "mt-4 text-sm font-semibold text-center h-5 text-blue-500";
+  
+  try {
+    const res = await fetch(`${serverUrl}/api/tickets/call-specific`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ deskId: currentDeskId, ticketNumber: num }),
+    });
+
+    const data = await res.json();
+    
+    if (res.ok) {
+      currentNumberEl.textContent = data.ticket.ticketNumber;
+      currentNumberEl.classList.add('scale-125', 'text-indigo-600');
+      setTimeout(() => {
+        currentNumberEl.classList.remove('scale-125', 'text-indigo-600');
+      }, 300);
+      
+      statusMsg.textContent = `Đã gọi số ${data.ticket.ticketNumber} thành công!`;
+      statusMsg.className = "mt-4 text-sm font-semibold text-center h-5 text-green-600";
+      input.value = ''; // clear input
+      
+      // Ẩn lại sau khi gọi thành công
+      const specificCallContainer = document.getElementById('specificCallContainer');
+      if (specificCallContainer) {
+        specificCallContainer.classList.add('hidden');
+      }
+    } else {
+      statusMsg.textContent = data.error || 'Lỗi hệ thống';
+      statusMsg.className = "mt-4 text-sm font-semibold text-center h-5 text-red-500";
     }
   } catch (err) {
     statusMsg.textContent = 'Lỗi kết nối máy chủ';

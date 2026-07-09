@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { eventEmitter } from '@/lib/eventEmitter';
+import { eventEmitter, activeAudioClients } from '@/lib/eventEmitter';
 
 export async function POST(req: Request) {
   try {
@@ -17,6 +17,12 @@ export async function POST(req: Request) {
     if (!desk || desk.status === 'PAUSED') {
       return NextResponse.json({ error: 'Bàn tiếp đón không tồn tại hoặc đang tạm dừng' }, { status: 400 });
     }
+
+    const audioCount = activeAudioClients.get(desk.areaId) || 0;
+    if (audioCount === 0) {
+      return NextResponse.json({ error: 'Cảnh báo: Chưa mở Trạm phát âm thanh. Vui lòng bật trang Audio để tiếp tục!' }, { status: 400 });
+    }
+
 
     // Lấy thời điểm bắt đầu ngày hôm nay
     const startOfDay = new Date();

@@ -1,22 +1,30 @@
 import { NextRequest } from 'next/server';
-import { eventEmitter } from '@/lib/eventEmitter';
+import { eventEmitter, activeAudioClients } from '@/lib/eventEmitter';
 
-// Đây là API Server-Sent Events (SSE) để kết nối liên tục 1 chiều từ Server -> Client (Tivi)
+// Đây là API Server-Sent Events (SSE) để kết nối liên tục 1 chiều từ Server -> Client (Tivi / Audio)
 export async function GET(req: NextRequest) {
   const searchParams = req.nextUrl.searchParams;
   const areaId = searchParams.get('areaId');
+  const type = searchParams.get('type');
 
   if (!areaId) {
     return new Response('Missing areaId', { status: 400 });
   }
 
+  const areaIdNum = Number(areaId);
+
   // Khởi tạo luồng stream
   const stream = new ReadableStream({
     start(controller) {
+      if (type === 'audio') {
+        const count = activeAudioClients.get(areaIdNum) || 0;
+        activeAudioClients.set(areaIdNum, count + 1);
+      }
+
       // Hàm nhận sự kiện từ bộ phát sóng
       const listener = (data: any) => {
-        // Chỉ gửi sự kiện nếu đúng areaId mà Tivi này đang trực
-        if (data.areaId === Number(areaId)) {
+        // Chỉ gửi sự kiện nếu đúng areaId mà Tivi/Audio này đang trực
+        if (data.areaId === areaIdNum) {
           controller.enqueue(`data: ${JSON.stringify(data)}\n\n`);
         }
       };
@@ -31,6 +39,11 @@ export async function GET(req: NextRequest) {
       req.signal.addEventListener('abort', () => {
         eventEmitter.off('call-ticket', listener);
         controller.close();
+
+        if (type === 'audio') {
+          const count = activeAudioClients.get(areaIdNum) || 0;
+          activeAudioClients.set(areaIdNum, Math.max(0, count - 1));
+        }
       });
     },
   });

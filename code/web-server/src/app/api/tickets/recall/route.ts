@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { eventEmitter } from '@/lib/eventEmitter';
+import { eventEmitter, activeAudioClients } from '@/lib/eventEmitter';
 
 export async function POST(req: Request) {
   try {
@@ -38,6 +38,12 @@ export async function POST(req: Request) {
         empty: true
       });
     }
+
+    const audioCount = activeAudioClients.get(currentTicket.areaId) || 0;
+    if (audioCount === 0) {
+      return NextResponse.json({ error: 'Cảnh báo: Chưa mở Trạm phát âm thanh. Vui lòng bật trang Audio để phát lại!' }, { status: 400 });
+    }
+
 
     // Bắn lại event SSE xuống Tivi để đọc loa lại
     eventEmitter.emit('call-ticket', {

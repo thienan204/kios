@@ -69,8 +69,6 @@ export default function AudioPage({ params }: { params: Promise<{ id: string }> 
       return;
     }
 
-    let currentEventSource: EventSource | null = null;
-
     const claimDevice = async () => {
       let deviceId = localStorage.getItem('audioDeviceId');
       if (!deviceId) {
@@ -88,24 +86,6 @@ export default function AudioPage({ params }: { params: Promise<{ id: string }> 
         if (!data.success) {
           setIsLockedOut(true);
           setErrorMsg(data.message);
-        } else {
-          currentEventSource = new EventSource(`/api/events?areaId=${areaId}`);
-          currentEventSource.onmessage = (event) => {
-            try {
-              const data = JSON.parse(event.data);
-              if (data.type === 'ping') return;
-              if (data.type === 'call') {
-                setLastCalled(`Đang phát: Số ${data.ticketNumber} - ${data.deskName}`);
-                queueAudio(data.ticketNumber, data.deskName, data.audioTemplate);
-                setHistory((prev) => [{ number: data.ticketNumber, desk: data.deskName }, ...prev].slice(0, 10));
-              }
-            } catch (err) {
-              console.error('Lỗi parse SSE:', err);
-            }
-          };
-          currentEventSource.onerror = () => {
-            console.log('Mất kết nối SSE. Đang thử lại...');
-          };
         }
       } catch (err) {
         setErrorMsg('Lỗi kiểm tra bản quyền thiết bị Audio.');
@@ -113,11 +93,34 @@ export default function AudioPage({ params }: { params: Promise<{ id: string }> 
     };
 
     claimDevice();
+  }, [areaId]);
+
+  useEffect(() => {
+    if (!areaId || isLockedOut || !audioEnabled) return;
+
+    const eventSource = new EventSource(`/api/events?areaId=${areaId}&type=audio`);
+    eventSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === 'ping') return;
+        if (data.type === 'call') {
+          setLastCalled(`Đang phát: Số ${data.ticketNumber} - ${data.deskName}`);
+          // Vô hiệu hóa eslint tạm thời cho next line vì queueAudio dependencies chưa wrap callback
+          queueAudio(data.ticketNumber, data.deskName, data.audioTemplate);
+          setHistory((prev) => [{ number: data.ticketNumber, desk: data.deskName }, ...prev].slice(0, 10));
+        }
+      } catch (err) {
+        console.error('Lỗi parse SSE:', err);
+      }
+    };
+    eventSource.onerror = () => {
+      console.log('Mất kết nối SSE. Đang thử lại...');
+    };
 
     return () => {
-      if (currentEventSource) currentEventSource.close();
+      eventSource.close();
     };
-  }, [areaId]);
+  }, [areaId, isLockedOut, audioEnabled]);
 
   const queueAudio = (ticketNumber: number, deskName: string, template: string) => {
     let textToSpeak = template || 'Mời số {ticket} đến {desk}';
