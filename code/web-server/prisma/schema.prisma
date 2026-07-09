@@ -1,0 +1,71 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  password  String
+  createdAt DateTime @default(now())
+}
+
+
+model Area {
+  id                 Int      @id @default(autoincrement())
+  name               String
+  startTime          String
+  endTime            String
+  afternoonStartTime String
+  afternoonEndTime   String
+  audioTemplate      String?
+  printHospitalName  String?  @default("Bệnh viện Đa khoa Tỉnh")
+  printGreeting      String?  @default("SỐ THỨ TỰ CỦA BẠN")
+  printFooter        String?  @default("Vui lòng ngồi chờ đến lượt gọi.")
+  kioskDeviceId      String?
+  audioDeviceId      String?
+  tvDeviceId         String?
+  desks              Desk[]
+  tickets            Ticket[]
+}
+
+model Desk {
+  id              Int          @id @default(autoincrement()) 
+  name            String       
+  areaId          Int          
+  area            Area         @relation(fields: [areaId], references: [id])
+  status          DeskStatus   @default(ACTIVE)
+  tickets         Ticket[]
+}
+
+model Ticket {
+  id              Int          @id @default(autoincrement())
+  ticketNumber    Int          
+  areaId          Int          
+  area            Area         @relation(fields: [areaId], references: [id])
+  status          TicketStatus @default(WAITING)
+  deskId          Int?
+  desk            Desk?        @relation(fields: [deskId], references: [id])
+  issuedAt        DateTime     @default(now())
+  calledAt        DateTime?
+  completedAt     DateTime?
+}
+
+enum DeskStatus {
+  ACTIVE
+  PAUSED
+}
+
+enum TicketStatus {
+  WAITING
+  CALLING
+  COMPLETED
+  SKIPPED
+}
