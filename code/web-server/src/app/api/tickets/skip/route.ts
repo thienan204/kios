@@ -24,6 +24,7 @@ export async function POST(req: Request) {
       },
       data: {
         status: 'SKIPPED',
+        completedAt: new Date(),
       },
     });
 

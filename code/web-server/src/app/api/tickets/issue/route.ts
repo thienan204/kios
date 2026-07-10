@@ -15,7 +15,7 @@ function isTimeInRanges(
 
 export async function POST(req: Request) {
   try {
-    const { areaId } = await req.json();
+    const { areaId, phoneNumber } = await req.json();
 
     if (!areaId) {
       return NextResponse.json({ error: 'Thiếu thông tin khu vực' }, { status: 400 });
@@ -48,12 +48,59 @@ export async function POST(req: Request) {
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
 
-    // Tìm số lớn nhất hôm nay
+    let shiftStartTime = startOfDay;
+    
+    // Nếu cấu hình reset đếm số theo từng ca và hiện tại đang là ca chiều
+    if (area.ticketResetType === 'PER_SHIFT' && currentHHmm >= area.afternoonStartTime) {
+      const [h, m] = area.afternoonStartTime.split(':').map(Number);
+      shiftStartTime = new Date();
+      shiftStartTime.setHours(h, m, 0, 0);
+    }
+
+    // Kiểm tra xem SĐT này đã có số Đang chờ trong ca này chưa
+    if (phoneNumber) {
+      const existingTicket = await prisma.ticket.findFirst({
+        where: {
+          areaId: Number(areaId),
+          phoneNumber: phoneNumber,
+          status: 'WAITING',
+          issuedAt: {
+            gte: shiftStartTime,
+          }
+        }
+      });
+
+      if (existingTicket) {
+        // Nếu đã có vé chờ, tính số người đang chờ trước người này
+        const waitingCount = await prisma.ticket.count({
+          where: {
+            areaId: Number(areaId),
+            status: 'WAITING',
+            ticketNumber: { lt: existingTicket.ticketNumber },
+            issuedAt: { gte: shiftStartTime }
+          }
+        });
+
+        return NextResponse.json({
+          success: true,
+          ticketNumber: existingTicket.ticketNumber,
+          waitingCount: waitingCount,
+          areaName: area.name,
+          issuedAt: existingTicket.issuedAt,
+          printHospitalName: area.printHospitalName,
+          printGreeting: area.printGreeting,
+          printFooter: area.printFooter,
+          isExisting: true // báo cho frontend biết đây là vé cũ
+        });
+      }
+    }
+
+    // Tìm số lớn nhất trong ca hiện tại
     const lastTicket = await prisma.ticket.findFirst({
       where: {
         areaId: Number(areaId),
         issuedAt: {
-          gte: startOfDay,
+          gte: shiftStartTime,
         },
       },
       orderBy: {
@@ -63,24 +110,24 @@ export async function POST(req: Request) {
 
     const nextNumber = lastTicket ? lastTicket.ticketNumber + 1 : 1;
 
-    // Đếm số người đang chờ
-    const waitingCount = await prisma.ticket.count({
-      where: {
-        areaId: Number(areaId),
-        status: 'WAITING',
-        issuedAt: {
-          gte: startOfDay,
-        }
-      }
-    });
-
     // Tạo phiếu mới
     const newTicket = await prisma.ticket.create({
       data: {
         ticketNumber: nextNumber,
         areaId: Number(areaId),
         status: 'WAITING',
+        phoneNumber: phoneNumber || null,
       },
+    });
+
+    // Đếm số người đang chờ trước người này (các vé lấy trước đó trong cùng ca)
+    const waitingCount = await prisma.ticket.count({
+      where: {
+        areaId: Number(areaId),
+        status: 'WAITING',
+        ticketNumber: { lt: nextNumber },
+        issuedAt: { gte: shiftStartTime }
+      }
     });
 
     return NextResponse.json({

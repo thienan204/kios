@@ -26,6 +26,7 @@ export async function POST(req: Request) {
         printHospitalName: body.printHospitalName,
         printGreeting: body.printGreeting,
         printFooter: body.printFooter,
+        ticketResetType: body.ticketResetType || 'ALL_DAY',
       },
     });
     return NextResponse.json(newArea);

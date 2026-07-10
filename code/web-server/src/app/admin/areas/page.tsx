@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Table, Button, Modal, Form, Input, InputNumber, TimePicker, message, Popconfirm, Typography, Tooltip, Tag } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, UnlockOutlined, CheckCircleOutlined, FastForwardOutlined } from '@ant-design/icons';
+import { Table, Button, Modal, Form, Input, InputNumber, TimePicker, message, Popconfirm, Typography, Tooltip, Tag, Radio, QRCode } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined, UnlockOutlined, CheckCircleOutlined, FastForwardOutlined, PrinterOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 
 export default function AreasPage() {
@@ -16,6 +16,9 @@ export default function AreasPage() {
   const [jumpAreaId, setJumpAreaId] = useState<number | null>(null);
   const [jumpNextNumber, setJumpNextNumber] = useState<number | null>(null);
   const [isJumping, setIsJumping] = useState(false);
+
+  const [isPrintModalVisible, setIsPrintModalVisible] = useState(false);
+  const [printArea, setPrintArea] = useState<any>(null);
 
   const [form] = Form.useForm();
 
@@ -49,6 +52,7 @@ export default function AreasPage() {
       audioTemplate: record.audioTemplate,
       morningRange: [dayjs(record.startTime, 'HH:mm'), dayjs(record.endTime, 'HH:mm')],
       afternoonRange: [dayjs(record.afternoonStartTime, 'HH:mm'), dayjs(record.afternoonEndTime, 'HH:mm')],
+      ticketResetType: record.ticketResetType || 'ALL_DAY',
       printHospitalName: record.printHospitalName ?? 'Bệnh viện Đa khoa Tỉnh',
       printGreeting: record.printGreeting ?? 'SỐ THỨ TỰ CỦA BẠN',
       printFooter: record.printFooter ?? 'Vui lòng ngồi chờ đến lượt gọi.',
@@ -129,6 +133,7 @@ export default function AreasPage() {
       endTime: values.morningRange[1].format('HH:mm'),
       afternoonStartTime: values.afternoonRange[0].format('HH:mm'),
       afternoonEndTime: values.afternoonRange[1].format('HH:mm'),
+      ticketResetType: values.ticketResetType,
       printHospitalName: values.printHospitalName,
       printGreeting: values.printGreeting,
       printFooter: values.printFooter,
@@ -176,12 +181,13 @@ export default function AreasPage() {
         const kioskPath = `/layso/${record.id}`;
         const audioPath = `/audio/${record.id}`;
         const tvPath = `/tv/${record.id}`;
+        const mobilePath = `/m/${record.uid}`;
         return (
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold text-gray-500 w-10">Kiosk:</span>
+              <span className="text-xs font-semibold text-gray-500 w-12">Kiosk:</span>
               <Typography.Text 
-                copyable={{ text: typeof window !== 'undefined' ? `${window.location.origin}${kioskPath}` : kioskPath }}
+                copyable={{ text: typeof window !== 'undefined' ? `${process.env.NEXT_PUBLIC_SERVER_URL || window.location.origin}${kioskPath}` : kioskPath }}
                 className="bg-blue-50 px-2 py-0.5 rounded border border-blue-200 text-blue-700 font-mono text-xs"
               >
                 {kioskPath}
@@ -199,9 +205,9 @@ export default function AreasPage() {
             </div>
             
             <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold text-gray-500 w-10">Audio:</span>
+              <span className="text-xs font-semibold text-gray-500 w-12">Audio:</span>
               <Typography.Text 
-                copyable={{ text: typeof window !== 'undefined' ? `${window.location.origin}${audioPath}` : audioPath }}
+                copyable={{ text: typeof window !== 'undefined' ? `${process.env.NEXT_PUBLIC_SERVER_URL || window.location.origin}${audioPath}` : audioPath }}
                 className="bg-green-50 px-2 py-0.5 rounded border border-green-200 text-green-700 font-mono text-xs"
               >
                 {audioPath}
@@ -219,14 +225,25 @@ export default function AreasPage() {
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold text-gray-500 w-10">Tivi:</span>
+              <span className="text-xs font-semibold text-gray-500 w-12">Tivi:</span>
               <Typography.Text 
-                copyable={{ text: typeof window !== 'undefined' ? `${window.location.origin}${tvPath}` : tvPath }}
+                copyable={{ text: typeof window !== 'undefined' ? `${process.env.NEXT_PUBLIC_SERVER_URL || window.location.origin}${tvPath}` : tvPath }}
                 className="bg-purple-50 px-2 py-0.5 rounded border border-purple-200 text-purple-700 font-mono text-xs"
               >
                 {tvPath}
               </Typography.Text>
               <Button size="small" type="link" href={tvPath} target="_blank" className="p-0 text-purple-600">Mở</Button>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold text-gray-500 w-12">Mobile:</span>
+              <Typography.Text 
+                copyable={{ text: typeof window !== 'undefined' ? `${process.env.NEXT_PUBLIC_SERVER_URL || window.location.origin}${mobilePath}` : mobilePath }}
+                className="bg-orange-50 px-2 py-0.5 rounded border border-orange-200 text-orange-700 font-mono text-xs"
+              >
+                {mobilePath}
+              </Typography.Text>
+              <Button size="small" type="link" href={mobilePath} target="_blank" className="p-0 text-orange-600">Mở</Button>
             </div>
           </div>
         );
@@ -237,6 +254,15 @@ export default function AreasPage() {
       key: 'actions',
       render: (_: any, record: any) => (
         <div className="flex gap-2">
+          <Tooltip title="In Mã QR cho Mobile">
+            <Button 
+              icon={<PrinterOutlined />} 
+              onClick={() => {
+                setPrintArea(record);
+                setIsPrintModalVisible(true);
+              }} 
+            />
+          </Tooltip>
           <Tooltip title="Nhảy số Kiosk">
             <Button icon={<FastForwardOutlined />} onClick={() => handleOpenJump(record.id)} className="text-indigo-600 border-indigo-200 hover:bg-indigo-50" />
           </Tooltip>
@@ -288,8 +314,14 @@ export default function AreasPage() {
           <Form.Item name="afternoonRange" label="Khung giờ Chiều" rules={[{ required: true }]}>
             <TimePicker.RangePicker format="HH:mm" className="w-full" />
           </Form.Item>
+          <Form.Item name="ticketResetType" label="Hình thức đếm số" initialValue="ALL_DAY">
+            <Radio.Group>
+              <Radio value="ALL_DAY">Cả ngày (1 -&gt; n)</Radio>
+              <Radio value="PER_SHIFT">Chia ca (Sáng 1 -&gt; n, Chiều 1 -&gt; n)</Radio>
+            </Radio.Group>
+          </Form.Item>
           <Form.Item 
-            name="audioTemplate" 
+            name="audioTemplate"  
             label="Mẫu câu đọc loa" 
             rules={[{ required: true }]}
             extra={
@@ -349,6 +381,61 @@ export default function AreasPage() {
             />
           </div>
         </div>
+      </Modal>
+
+      <Modal
+        title="In Mã QR Lấy Số Qua Điện Thoại"
+        open={isPrintModalVisible}
+        onCancel={() => setIsPrintModalVisible(false)}
+        footer={[
+          <Button key="cancel" onClick={() => setIsPrintModalVisible(false)}>Đóng</Button>,
+          <Button key="print" type="primary" icon={<PrinterOutlined />} onClick={() => window.print()}>
+            In trang này
+          </Button>
+        ]}
+        width={500}
+      >
+        {printArea && (
+          <div className="flex flex-col items-center">
+            <div className="p-8 border-2 border-dashed border-gray-300 rounded-xl text-center print:border-none print:p-0">
+              <h2 className="text-2xl font-bold uppercase mb-2 text-blue-800">{printArea.name}</h2>
+              <p className="text-gray-600 mb-6 font-medium">Quét mã QR bằng điện thoại để lấy số</p>
+              <div className="flex justify-center bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                <QRCode 
+                  value={`${process.env.NEXT_PUBLIC_SERVER_URL || (typeof window !== 'undefined' ? window.location.origin : '')}/m/${printArea.uid}`} 
+                  size={250} 
+                  color="#1e3a8a" // text-blue-900
+                  errorLevel="H"
+                />
+              </div>
+              <p className="mt-6 text-sm text-gray-500 max-w-xs mx-auto">
+                Không cần cài đặt ứng dụng. Hỗ trợ quét bằng Camera, Zalo, hoặc các ứng dụng quét mã QR khác.
+              </p>
+            </div>
+
+            <style dangerouslySetInnerHTML={{__html: `
+              @media print {
+                body * {
+                  visibility: hidden;
+                }
+                .ant-modal-content {
+                  box-shadow: none !important;
+                }
+                .ant-modal-content * {
+                  visibility: visible;
+                }
+                .ant-modal-close, .ant-modal-header, .ant-modal-footer, .print\\:hidden {
+                  display: none !important;
+                }
+                .ant-modal {
+                  top: 0;
+                  margin: 0;
+                  padding: 0;
+                }
+              }
+            `}} />
+          </div>
+        )}
       </Modal>
     </div>
   );

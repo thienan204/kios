@@ -31,13 +31,13 @@ export async function POST(req: Request) {
     // 1. Cập nhật các vé cũ đang GỌI ở bàn này thành HOÀN THÀNH
     await prisma.ticket.updateMany({
       where: { deskId: Number(deskId), status: 'CALLING', issuedAt: { gte: startOfDay } },
-      data: { status: 'COMPLETED' },
+      data: { status: 'COMPLETED', completedAt: new Date() },
     });
 
     // 2. Chuyển các vé ĐANG CHỜ có số NHỎ HƠN số được gọi thành BỎ QUA
     await prisma.ticket.updateMany({
       where: { areaId: desk.areaId, status: 'WAITING', ticketNumber: { lt: num }, issuedAt: { gte: startOfDay } },
-      data: { status: 'SKIPPED' },
+      data: { status: 'SKIPPED', completedAt: new Date() },
     });
 
     // 3. Tìm xem số ticketNumber có tồn tại không

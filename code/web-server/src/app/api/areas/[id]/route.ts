@@ -33,6 +33,7 @@ export async function PUT(req: Request, context: { params: Promise<{ id: string 
         printHospitalName: body.printHospitalName,
         printGreeting: body.printGreeting,
         printFooter: body.printFooter,
+        ticketResetType: body.ticketResetType,
       },
     });
     return NextResponse.json(updatedArea);

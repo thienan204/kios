@@ -40,6 +40,7 @@ export async function POST(req: Request) {
       },
       data: {
         status: 'COMPLETED',
+        completedAt: new Date(),
       },
     });
 

@@ -20,6 +20,7 @@ model User {
 
 model Area {
   id                 Int      @id @default(autoincrement())
+  uid                String   @unique @default(uuid())
   name               String
   startTime          String
   endTime            String
@@ -32,6 +33,7 @@ model Area {
   kioskDeviceId      String?
   audioDeviceId      String?
   tvDeviceId         String?
+  ticketResetType    String   @default("ALL_DAY")
   desks              Desk[]
   tickets            Ticket[]
 }
@@ -53,6 +55,7 @@ model Ticket {
   status          TicketStatus @default(WAITING)
   deskId          Int?
   desk            Desk?        @relation(fields: [deskId], references: [id])
+  phoneNumber     String?
   issuedAt        DateTime     @default(now())
   calledAt        DateTime?
   completedAt     DateTime?

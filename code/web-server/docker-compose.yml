@@ -12,6 +12,10 @@ services:
     environment:
       # Sửa đường dẫn CSDL tương ứng trên server của bạn
       - DATABASE_URL=postgresql://postgres:password123@host.docker.internal:5432/kiosklayso?schema=public
+      # Tên miền (hoặc IP Public) để bệnh nhân quét QR lấy số (VD: http://192.168.1.50:3000)
+      - NEXT_PUBLIC_SERVER_URL=http://localhost:3000
+      # Thời gian chờ hiển thị số trước khi reset về trang chính (Tính bằng mili-giây, mặc định 3000 = 3s)
+      - NEXT_PUBLIC_KIOSK_RESET_DELAY=3000
     # Nếu PostgreSQL cũng chạy bằng Docker trên server thì kết nối qua cùng network
     # networks:
     #   - your_app_network

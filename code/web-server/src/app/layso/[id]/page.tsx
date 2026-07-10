@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams } from 'next/navigation';
-import { message } from 'antd';
+import { message, QRCode } from 'antd';
 
 export default function KioskPage() {
   const params = useParams();
@@ -12,10 +12,13 @@ export default function KioskPage() {
   const [isLockedOut, setIsLockedOut] = useState(false);
   const [lastIssuedNumber, setLastIssuedNumber] = useState<number | null>(null);
   const [areaName, setAreaName] = useState<string>('Hệ thống lấy số tự động');
+  const [areaUid, setAreaUid] = useState<string | null>(null);
   const [imageVersion, setImageVersion] = useState('');
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setImageVersion(`?v=${Date.now()}`);
+    setMounted(true);
   }, []);
   
   // State cho vé in
@@ -44,6 +47,7 @@ export default function KioskPage() {
         if (res.ok) {
           const data = await res.json();
           if (data.name) setAreaName(data.name);
+          if (data.uid) setAreaUid(data.uid);
         }
       } catch (err) {
         console.error('Không thể lấy thông tin khu vực', err);
@@ -131,8 +135,13 @@ export default function KioskPage() {
           } catch (e) {
             console.log('Không thể gọi lệnh in trên thiết bị này');
           }
-          // Reset giao diện sau 5 giây để người khác lấy số
-          setTimeout(() => setTicketData(null), 5000);
+          
+          // Lấy thời gian chờ reset từ cấu hình (Mặc định 3000ms = 3 giây)
+          const resetDelay = process.env.NEXT_PUBLIC_KIOSK_RESET_DELAY 
+            ? parseInt(process.env.NEXT_PUBLIC_KIOSK_RESET_DELAY) 
+            : 3000;
+            
+          setTimeout(() => setTicketData(null), resetDelay);
         }, 500);
 
       } else {
@@ -234,6 +243,21 @@ export default function KioskPage() {
             </div>
           </div>
         )}
+
+        {/* Mã QR Lấy Số Qua Điện Thoại - Góc dưới bên phải */}
+        <div className="absolute bottom-6 right-6 bg-white p-4 rounded-2xl shadow-xl border border-gray-200 flex flex-col items-center">
+          <p className="text-sm font-bold text-blue-900 mb-2 uppercase text-center w-32 leading-tight">
+            Quét mã để<br/>lấy số trên điện thoại
+          </p>
+          {mounted && areaUid && (
+            <QRCode 
+              value={`${process.env.NEXT_PUBLIC_SERVER_URL || window.location.origin}/m/${areaUid}`} 
+              size={120} 
+              color="#1e3a8a" 
+              bordered={false} 
+            />
+          )}
+        </div>
       </div>
 
       {/* KHU VỰC CHUẨN BỊ IN (Bình thường ẩn, chỉ hiện trên giấy in K80) */}

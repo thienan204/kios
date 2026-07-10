@@ -4,7 +4,8 @@ import prisma from '@/lib/prisma';
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
-    const dateParam = searchParams.get('date'); // YYYY-MM-DD
+    const startDateParam = searchParams.get('startDate');
+    const endDateParam = searchParams.get('endDate');
     
     let startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
@@ -12,12 +13,13 @@ export async function GET(req: Request) {
     let endOfDay = new Date();
     endOfDay.setHours(23, 59, 59, 999);
 
-    if (dateParam) {
-      const parsedDate = new Date(dateParam);
-      if (!isNaN(parsedDate.getTime())) {
-        startOfDay = new Date(parsedDate);
+    if (startDateParam && endDateParam) {
+      const parsedStart = new Date(startDateParam);
+      const parsedEnd = new Date(endDateParam);
+      if (!isNaN(parsedStart.getTime()) && !isNaN(parsedEnd.getTime())) {
+        startOfDay = new Date(parsedStart);
         startOfDay.setHours(0, 0, 0, 0);
-        endOfDay = new Date(parsedDate);
+        endOfDay = new Date(parsedEnd);
         endOfDay.setHours(23, 59, 59, 999);
       }
     }

@@ -37,16 +37,16 @@ export default function AdminDashboard() {
                     items={[
                       {
                         title: <Text strong>Bước 1: Tạo Shortcut</Text>,
-                        content: 'Ra ngoài màn hình Desktop, click chuột phải vào biểu tượng Google Chrome, chọn "Copy", sau đó "Paste" để tạo ra 1 bản sao. Đổi tên bản sao này thành "KIOSK LẤY SỐ".',
+                        description: 'Ra ngoài màn hình Desktop, click chuột phải vào biểu tượng Google Chrome, chọn "Copy", sau đó "Paste" để tạo ra 1 bản sao. Đổi tên bản sao này thành "KIOSK LẤY SỐ".',
                         icon: <ChromeOutlined className="text-blue-500" />
                       },
                       {
                         title: <Text strong>Bước 2: Mở Properties</Text>,
-                        content: 'Click chuột phải vào biểu tượng "KIOSK LẤY SỐ" vừa tạo, chọn "Properties".',
+                        description: 'Click chuột phải vào biểu tượng "KIOSK LẤY SỐ" vừa tạo, chọn "Properties".',
                       },
                       {
                         title: <Text strong>Bước 3: Thêm mã cấu hình</Text>,
-                        content: (
+                        description: (
                           <div>
                             Tại ô <strong>Target</strong>, di chuyển chuột xuống cuối dòng, thêm 1 dấu cách (space) và dán đoạn mã sau vào:
                             <div className="bg-gray-100 p-3 rounded mt-2 font-mono text-sm border text-blue-800">
@@ -60,7 +60,7 @@ export default function AdminDashboard() {
                       },
                       {
                         title: <Text strong>Bước 4: Lưu và Hoàn tất</Text>,
-                        content: (
+                        description: (
                           <div>
                             Nhấn OK. Từ nay, chỉ cần click đúp vào biểu tượng này, trình duyệt sẽ mở full màn hình không có nút tắt. Khi người bệnh chạm "LẤY SỐ", máy in nhiệt (mặc định) sẽ tự in phiếu ngay lập tức!
                             <Alert 
@@ -95,15 +95,15 @@ export default function AdminDashboard() {
                     items={[
                       {
                         title: <Text strong>Bước 1: Khởi động App</Text>,
-                        content: 'Mở ứng dụng "Bàn Tiếp Đón Kiosk" (đã được đóng gói) trên máy tính của nhân viên. Ứng dụng này nhỏ gọn và luôn nổi ở góc màn hình.',
+                        description: 'Mở ứng dụng "Bàn Tiếp Đón Kiosk" (đã được đóng gói) trên máy tính của nhân viên. Ứng dụng này nhỏ gọn và luôn nổi ở góc màn hình.',
                       },
                       {
                         title: <Text strong>Bước 2: Cấu hình kết nối lần đầu</Text>,
-                        content: 'Nhập địa chỉ URL của máy chủ (Ví dụ: http://192.168.1.100:3000), ấn nút "Kết nối" và chọn Bàn mà nhân viên đang ngồi từ danh sách thả xuống.',
+                        description: 'Nhập địa chỉ URL của máy chủ (Ví dụ: http://192.168.1.100:3000), ấn nút "Kết nối" và chọn Bàn mà nhân viên đang ngồi từ danh sách thả xuống.',
                       },
                       {
                         title: <Text strong>Bước 3: Sử dụng Phím tắt (Global Shortcut)</Text>,
-                        content: (
+                        description: (
                           <div>
                             Bác sĩ có thể dùng chuột click nút <strong className="text-blue-600">"GỌI TIẾP THEO"</strong> hoặc đơn giản là nhấn phím tắt toàn cục <strong className="bg-gray-200 px-1 rounded">Alt + 1</strong> trên bàn phím dù đang làm việc ở bất kỳ phần mềm nào (HIS, Word...).
                             <br/>Tín hiệu sẽ lập tức bắn sang Tivi và Loa sẽ tự động đọc.
@@ -132,11 +132,11 @@ export default function AdminDashboard() {
                     items={[
                       {
                         title: <Text strong>Bước 1: Thiết lập phần cứng</Text>,
-                        content: 'Chuẩn bị 1 máy tính Mini PC (hoặc Laptop/TV Box có chạy trình duyệt Chrome/Edge). Cắm cáp xuất hình (HDMI) vào Tivi lớn và cắm cáp âm thanh (3.5mm) vào hệ thống Ampli/Loa của khu vực đó.',
+                        description: 'Chuẩn bị 1 máy tính Mini PC (hoặc Laptop/TV Box có chạy trình duyệt Chrome/Edge). Cắm cáp xuất hình (HDMI) vào Tivi lớn và cắm cáp âm thanh (3.5mm) vào hệ thống Ampli/Loa của khu vực đó.',
                       },
                       {
                         title: <Text strong>Bước 2: Truy cập trang hiển thị Tivi</Text>,
-                        content: (
+                        description: (
                           <div>
                             Mở trình duyệt, truy cập đường dẫn: 
                             <div className="bg-gray-100 p-3 rounded mt-2 font-mono text-sm border text-blue-800">
