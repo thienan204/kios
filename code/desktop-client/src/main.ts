@@ -48,9 +48,14 @@ function renderConfig() {
         <button id="loadDesksBtn" class="bg-blue-100 hover:bg-blue-200 text-blue-700 text-sm font-semibold px-3 rounded border border-blue-300 transition-colors cursor-pointer">Tải lại</button>
       </div>
       
+      <label class="block text-sm font-semibold mb-1">Chọn Khu vực:</label>
+      <select id="areaIdSelect" class="w-full p-2 border rounded mb-4 focus:outline-blue-500 disabled:bg-gray-300 disabled:cursor-not-allowed" disabled>
+        <option value="">-- Vui lòng ấn Kết nối máy chủ --</option>
+      </select>
+
       <label class="block text-sm font-semibold mb-1">Chọn Bàn tiếp đón:</label>
       <select id="deskIdSelect" class="w-full p-2 border rounded mb-2 focus:outline-blue-500 disabled:bg-gray-300 disabled:cursor-not-allowed" disabled>
-        <option value="">-- Vui lòng ấn Kết nối máy chủ --</option>
+        <option value="">-- Vui lòng chọn Khu vực trước --</option>
       </select>
       
       <label class="block text-sm font-semibold mb-1 mt-2 text-gray-700">Cấu hình Phím tắt:</label>
@@ -85,6 +90,25 @@ function renderConfig() {
   const serverUrlInput = document.getElementById('serverUrlInput') as HTMLInputElement;
   const configMsg = document.getElementById('configMsg')!;
 
+  const areaIdSelect = document.getElementById('areaIdSelect') as HTMLSelectElement;
+  let allDesks: any[] = [];
+
+  function renderDesksForArea(areaId: string | number) {
+    const filteredDesks = allDesks.filter(d => String(d.area?.id || d.areaId) === String(areaId));
+    deskIdSelect.innerHTML = '<option value="">-- Chọn Bàn --</option>' + 
+      filteredDesks.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+    
+    deskIdSelect.disabled = false;
+    
+    if (currentDeskId && filteredDesks.find(d => String(d.id) === String(currentDeskId))) {
+      deskIdSelect.value = currentDeskId;
+      saveConfigBtn.disabled = false;
+    } else {
+      deskIdSelect.value = "";
+      saveConfigBtn.disabled = true;
+    }
+  }
+
   loadDesksBtn?.addEventListener('click', async () => {
     configMsg.textContent = 'Đang tải danh sách bàn...';
     configMsg.className = 'text-center text-sm text-blue-500 mt-2 h-4';
@@ -93,21 +117,57 @@ function renderConfig() {
     const desks = await fetchDesksList(url);
     
     if (desks && Array.isArray(desks)) {
-      deskIdSelect.innerHTML = desks.map((d: any) => 
-        `<option value="${d.id}">${d.name} (${d.area?.name || 'Khu vực không rõ'})</option>`
-      ).join('');
+      allDesks = desks;
       
-      deskIdSelect.disabled = false;
-      saveConfigBtn.disabled = false;
+      const areasMap = new Map();
+      desks.forEach(d => {
+        if (d.area) areasMap.set(String(d.area.id), d.area.name);
+      });
+      
+      areaIdSelect.innerHTML = '<option value="">-- Chọn Khu vực --</option>' + 
+        Array.from(areasMap.entries()).map(([id, name]) => `<option value="${id}">${name}</option>`).join('');
+      
+      areaIdSelect.disabled = false;
+      
+      const savedAreaId = localStorage.getItem('kiosk_area_id');
+      if (savedAreaId && areasMap.has(savedAreaId)) {
+        areaIdSelect.value = savedAreaId;
+        renderDesksForArea(savedAreaId);
+      } else {
+        deskIdSelect.innerHTML = '<option value="">-- Vui lòng chọn Khu vực --</option>';
+        deskIdSelect.disabled = true;
+        saveConfigBtn.disabled = true;
+      }
+
       configMsg.textContent = 'Kết nối thành công!';
       configMsg.className = 'text-center text-sm text-green-600 mt-2 h-4';
-      
-      if (currentDeskId) deskIdSelect.value = currentDeskId;
     } else {
       configMsg.textContent = 'Lỗi kết nối máy chủ hoặc API';
       configMsg.className = 'text-center text-sm text-red-500 mt-2 h-4';
+      areaIdSelect.innerHTML = '<option value="">-- Vui lòng ấn Kết nối máy chủ --</option>';
+      areaIdSelect.disabled = true;
       deskIdSelect.innerHTML = '<option value="">-- Vui lòng ấn Kết nối máy chủ --</option>';
       deskIdSelect.disabled = true;
+      saveConfigBtn.disabled = true;
+    }
+  });
+
+  areaIdSelect?.addEventListener('change', () => {
+    const aid = areaIdSelect.value;
+    if (aid) {
+      localStorage.setItem('kiosk_area_id', aid);
+      renderDesksForArea(aid);
+    } else {
+      deskIdSelect.innerHTML = '<option value="">-- Vui lòng chọn Khu vực --</option>';
+      deskIdSelect.disabled = true;
+      saveConfigBtn.disabled = true;
+    }
+  });
+
+  deskIdSelect?.addEventListener('change', () => {
+    if (deskIdSelect.value) {
+      saveConfigBtn.disabled = false;
+    } else {
       saveConfigBtn.disabled = true;
     }
   });
