@@ -22,6 +22,8 @@ model Area {
   id                 Int      @id @default(autoincrement())
   uid                String   @unique @default(uuid())
   name               String
+  groupId            Int?
+  group              AreaGroup? @relation(fields: [groupId], references: [id])
   startTime          String
   endTime            String
   afternoonStartTime String
@@ -34,6 +36,11 @@ model Area {
   audioDeviceId      String?
   tvDeviceId         String?
   ticketResetType    String   @default("ALL_DAY")
+  isIssuePaused      Boolean  @default(false)
+  hasIssueLimit      Boolean  @default(false)
+  issueLimitMorning  Int      @default(0)
+  issueLimitAfternoon Int     @default(0)
+  kioskPin           String   @default("123456")
   desks              Desk[]
   tickets            Ticket[]
 }
@@ -48,17 +55,25 @@ model Desk {
 }
 
 model Ticket {
-  id              Int          @id @default(autoincrement())
-  ticketNumber    Int          
-  areaId          Int          
-  area            Area         @relation(fields: [areaId], references: [id])
-  status          TicketStatus @default(WAITING)
-  deskId          Int?
-  desk            Desk?        @relation(fields: [deskId], references: [id])
-  phoneNumber     String?
-  issuedAt        DateTime     @default(now())
-  calledAt        DateTime?
-  completedAt     DateTime?
+  id               Int       @id @default(autoincrement())
+  ticketNumber     Int       
+  areaId           Int       
+  area             Area      @relation(fields: [areaId], references: [id], onDelete: Cascade)
+  status           TicketStatus @default(WAITING)
+  issuedAt         DateTime  @default(now())
+  calledAt         DateTime? 
+  completedAt      DateTime? 
+  phoneNumber      String?   
+  customerName     String?   
+  deskId           Int?      
+  desk             Desk?     @relation(fields: [deskId], references: [id])
+  missedCallCount  Int       @default(0) 
+}
+
+model AreaGroup {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  areas     Area[]
 }
 
 enum DeskStatus {

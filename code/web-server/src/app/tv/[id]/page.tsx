@@ -9,9 +9,9 @@ export default function TVPage({ params }: { params: Promise<{ id: string }> }) 
   const { id: areaId } = React.use(params);
 
   const [currentCall, setCurrentCall] = useState<{ number: number; desk: string } | null>(null);
-  const [history, setHistory] = useState<{ number: number; desk: string }[]>([]);
+  const [ticketList, setTicketList] = useState<{ number: number; desk: string; status: string }[]>([]);
   const [audioEnabled, setAudioEnabled] = useState(false);
-  const [audioMuted, setAudioMuted] = useState(false);
+  const [tvMutedConfig, setTvMutedConfig] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -20,6 +20,7 @@ export default function TVPage({ params }: { params: Promise<{ id: string }> }) 
   const [fptApiKey, setFptApiKey] = useState<string>('');
   const [fptVoice, setFptVoice] = useState<string>('banmai');
   const [speechRate, setSpeechRate] = useState<number>(0.75);
+  const [historyLimit, setHistoryLimit] = useState<number>(5);
   
   const audioQueueRef = useRef<string[]>([]);
   const isPlayingRef = useRef<boolean>(false);
@@ -39,7 +40,29 @@ export default function TVPage({ params }: { params: Promise<{ id: string }> }) 
     if (savedFptVoice) setFptVoice(savedFptVoice);
     const savedRate = localStorage.getItem('tvSpeechRate');
     if (savedRate) setSpeechRate(parseFloat(savedRate));
+    const savedLimit = localStorage.getItem('tvHistoryLimit');
+    if (savedLimit) setHistoryLimit(parseInt(savedLimit, 10));
+    
+    const savedMuted = localStorage.getItem('tvMutedConfig');
+    if (savedMuted === 'false') {
+      setTvMutedConfig(false);
+    } else {
+      setTvMutedConfig(true);
+    }
   }, []);
+
+  const fetchData = async (preserveCurrentCall = false) => {
+    try {
+      const res = await fetch(`/api/tickets/history?areaId=${areaId}`);
+      const data = await res.json();
+      if (data.success) {
+        if (!preserveCurrentCall) setCurrentCall(data.currentCall);
+        if (data.ticketList) setTicketList(data.ticketList);
+      }
+    } catch (err) {
+      console.error('Lỗi fetch danh sách:', err);
+    }
+  };
 
   useEffect(() => {
     if (!areaId) {
@@ -47,21 +70,26 @@ export default function TVPage({ params }: { params: Promise<{ id: string }> }) 
       return;
     }
 
-    const eventSource = new EventSource(`/api/events?areaId=${areaId}`);
+    // Lấy dữ liệu ngay khi load
+    fetchData();
+
+    const eventSource = new EventSource(`/api/events?areaId=${areaId}${!tvMutedConfig ? '&type=audio' : ''}`);
     eventSource.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
         if (data.type === 'ping') return;
-        if (data.type === 'call') {
-          setCurrentCall((prev) => {
-            if (prev) {
-              setHistory((h) => [prev, ...h].slice(0, 5));
+        
+        if (data.type === 'call' || data.type === 'issue') {
+          if (data.type === 'call') {
+            // Cập nhật ngay lập tức số ĐANG GỌI to ở giữa màn hình
+            setCurrentCall({ number: data.ticketNumber, desk: data.deskName });
+            fetchData(true); // Cập nhật ngầm danh sách bên trái
+            
+            if (!tvMutedConfig) {
+              queueAudio(data.ticketNumber, data.deskName, data.audioTemplate);
             }
-            return { number: data.ticketNumber, desk: data.deskName };
-          });
-          
-          if (!audioMuted) {
-            queueAudio(data.ticketNumber, data.deskName, data.audioTemplate);
+          } else {
+            fetchData(false);
           }
         }
       } catch (err) {
@@ -73,7 +101,7 @@ export default function TVPage({ params }: { params: Promise<{ id: string }> }) 
     return () => {
       eventSource.close();
     };
-  }, [areaId, audioMuted]);
+  }, [areaId, tvMutedConfig]);
 
   const queueAudio = (ticketNumber: number, deskName: string, template: string) => {
     let textToSpeak = template || 'Mời số {ticket} đến {desk}';
@@ -237,24 +265,58 @@ export default function TVPage({ params }: { params: Promise<{ id: string }> }) 
   return (
     <div className="h-screen w-full flex bg-gray-900 overflow-hidden text-white font-sans relative">
       
-      {/* Phía bên trái: Hiển thị số ĐANG GỌI */}
-      <div className="flex-1 flex flex-col items-center justify-center border-r border-gray-700 relative">
-        {!audioEnabled && !audioMuted && (
+      {/* Phía bên trái: Danh sách hàng đợi và lịch sử */}
+      <div className="w-1/3 bg-gray-800 p-8 flex flex-col relative border-r border-gray-700">
+        <h3 className="text-3xl font-bold text-gray-400 mb-8 uppercase tracking-widest border-b border-gray-600 pb-4">
+          Danh sách Số thứ tự
+        </h3>
+        
+        <div className="flex-1 flex flex-col gap-4">
+          {/* Header 4 cột */}
+          <div className="grid grid-cols-[10%_35%_30%_25%] text-gray-400 font-bold text-lg px-4 pb-2 border-b border-gray-600 uppercase tracking-wider">
+            <div className="text-center">STT</div>
+            <div className="text-center">Chờ đăng ký</div>
+            <div className="text-center">Bàn</div>
+            <div className="text-center">Trạng thái</div>
+          </div>
+
+          {/* Danh sách */}
+          {ticketList.length > 0 ? ticketList.slice(0, historyLimit).map((item, index) => (
+            <div key={index} className={`grid grid-cols-[10%_35%_30%_25%] items-center py-4 px-2 rounded-xl border opacity-80 shadow-sm transition-colors duration-300 ${
+              item.status === 'CALLING' 
+                ? 'border-red-500 bg-gray-600 animate-pulse shadow-red-500/20' 
+                : 'border-gray-600 bg-gray-700'
+            }`}>
+              <div className="text-2xl font-bold text-gray-400 text-center">{index + 1}</div>
+              <div className="text-5xl font-black text-white text-center drop-shadow-md">{item.number}</div>
+              <div className="text-2xl font-bold text-gray-300 text-center">{item.desk}</div>
+              <div className={`text-lg font-bold text-center ${
+                item.status === 'WAITING' ? 'text-yellow-500' : 
+                item.status === 'CALLING' ? 'text-red-400' : 'text-green-400'
+              }`}>
+                {item.status === 'WAITING' ? 'Đang chờ' : 
+                 item.status === 'CALLING' ? 'Đang gọi' : 'Đã gọi'}
+              </div>
+            </div>
+          )) : (
+            <div className="text-gray-500 text-xl italic text-center mt-10">Trống</div>
+          )}
+        </div>
+      </div>
+
+      {/* Phía bên phải: Hiển thị số ĐANG GỌI */}
+      <div className="flex-1 flex flex-col items-center justify-center relative">
+        {!audioEnabled && !tvMutedConfig && (
           <div className="absolute top-10 w-full flex justify-center z-50">
             <Alert 
-              message="Trạng thái Âm thanh" 
-              description="Để Tivi có thể tự động đọc số, bạn cần kích hoạt. Nếu bạn đã dùng Trạm Audio riêng, hãy chọn Chỉ hiển thị hình ảnh."
-              type="warning" 
+              title="Trạng thái Âm thanh" 
+              description="Bạn đã cấu hình Bật loa cho Tivi này. Vui lòng bấm kích hoạt để trình duyệt cho phép tự động phát âm thanh."
+              type="info" 
               showIcon 
               action={
-                <div className="flex gap-2">
-                  <Button onClick={() => setAudioMuted(true)} type="default">
-                    Chỉ hiển thị hình ảnh
-                  </Button>
-                  <Button onClick={handleEnableAudio} type="primary" danger icon={<SoundOutlined />}>
-                    Bật Loa Tivi
-                  </Button>
-                </div>
+                <Button onClick={handleEnableAudio} type="primary" danger icon={<SoundOutlined />}>
+                  Kích hoạt Loa
+                </Button>
               }
             />
           </div>
@@ -277,33 +339,6 @@ export default function TVPage({ params }: { params: Promise<{ id: string }> }) 
           </div>
         )}
       </div>
-
-      {/* Phía bên phải: Lịch sử gọi */}
-      <div className="w-1/3 bg-gray-800 p-8 flex flex-col relative">
-        <h3 className="text-3xl font-bold text-gray-400 mb-8 uppercase tracking-widest border-b border-gray-600 pb-4">
-          Vừa gọi xong
-        </h3>
-        
-        <div className="flex-1 flex flex-col gap-6">
-          {history.length > 0 ? history.map((item, index) => (
-            <div key={index} className="flex justify-between items-center bg-gray-700 p-6 rounded-2xl border border-gray-600 opacity-80">
-              <span className="text-5xl font-black text-gray-300">{item.number}</span>
-              <span className="text-2xl font-bold text-gray-400">{item.desk}</span>
-            </div>
-          )) : (
-            <div className="text-gray-500 text-xl italic text-center mt-10">Trống</div>
-          )}
-        </div>
-        
-        {/* Nút cài đặt */}
-        <div className="absolute bottom-6 right-6">
-          <Button 
-            type="text" 
-            icon={<SettingOutlined className="text-3xl text-gray-500 hover:text-white" />} 
-            onClick={() => setIsSettingsOpen(true)}
-          />
-        </div>
-      </div>
       
       {/* Modal Cài đặt */}
       <Modal
@@ -317,6 +352,21 @@ export default function TVPage({ params }: { params: Promise<{ id: string }> }) 
         ]}
       >
         <div className="py-4">
+          <p className="text-sm text-gray-500 font-semibold mb-2">Chế độ Âm thanh Tivi</p>
+          <Select 
+            className="w-full mb-6"
+            value={tvMutedConfig ? 'muted' : 'unmuted'}
+            onChange={(val) => {
+              const isMuted = val === 'muted';
+              setTvMutedConfig(isMuted);
+              localStorage.setItem('tvMutedConfig', isMuted ? 'true' : 'false');
+            }}
+            options={[
+              { label: 'Tắt âm thanh (Chỉ hiển thị hình ảnh)', value: 'muted' },
+              { label: 'Bật âm thanh (Đọc số khi gọi)', value: 'unmuted' },
+            ]}
+          />
+
           <p className="text-sm text-gray-500 font-semibold mb-2">Nguồn Âm Thanh (Audio Engine)</p>
           <Select 
             className="w-full mb-4"
@@ -371,7 +421,7 @@ export default function TVPage({ params }: { params: Promise<{ id: string }> }) 
             )}
           </div>
           
-          <p className="text-sm text-gray-500 font-semibold mb-2">Tốc độ phát audio</p>
+          <p className="text-sm text-gray-500 font-semibold mb-2">Tốc độ phát audio ({speechRate.toFixed(2)}x)</p>
           <div className="flex items-center justify-between mb-4">
             <span className="text-xs text-gray-400 font-medium w-12">Chậm</span>
             <input 
@@ -389,8 +439,33 @@ export default function TVPage({ params }: { params: Promise<{ id: string }> }) 
             />
             <span className="text-xs text-gray-400 font-medium w-12 text-right">Nhanh</span>
           </div>
+
+          <p className="text-sm text-gray-500 font-semibold mb-2 mt-4">Số lượng lịch sử hiển thị</p>
+          <Input 
+            type="number" 
+            min={1} 
+            max={20} 
+            value={historyLimit} 
+            onChange={(e) => {
+              const val = parseInt(e.target.value, 10);
+              if (!isNaN(val) && val > 0) {
+                setHistoryLimit(val);
+                localStorage.setItem('tvHistoryLimit', val.toString());
+              }
+            }}
+            className="w-full mb-4"
+          />
         </div>
       </Modal>
+
+      {/* Nút cài đặt chung cho toàn trang Tivi */}
+      <div className="absolute bottom-6 right-6 z-50 opacity-30 hover:opacity-100 transition-opacity duration-300">
+        <Button 
+          type="text" 
+          icon={<SettingOutlined className="text-4xl text-gray-400 hover:text-white" />} 
+          onClick={() => setIsSettingsOpen(true)}
+        />
+      </div>
 
     </div>
   );

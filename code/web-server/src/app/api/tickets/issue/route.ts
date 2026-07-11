@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { eventEmitter } from '@/lib/eventEmitter';
 
 function isTimeInRanges(
   currentTime: string,
@@ -29,6 +30,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Khu vực không tồn tại' }, { status: 404 });
     }
 
+    if (area.isIssuePaused) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Khu vực này hiện đang tạm dừng cấp số để xử lý. Vui lòng quay lại sau ít phút!' 
+      }, { status: 403 });
+    }
+
     // Lấy giờ hiện tại "HH:mm"
     const now = new Date();
     // Chuyển sang giờ Việt Nam (UTC+7) cho chính xác nếu server ở múi giờ khác
@@ -49,12 +57,40 @@ export async function POST(req: Request) {
     startOfDay.setHours(0, 0, 0, 0);
 
     let shiftStartTime = startOfDay;
+    let isAfternoon = false;
     
     // Nếu cấu hình reset đếm số theo từng ca và hiện tại đang là ca chiều
     if (area.ticketResetType === 'PER_SHIFT' && currentHHmm >= area.afternoonStartTime) {
       const [h, m] = area.afternoonStartTime.split(':').map(Number);
       shiftStartTime = new Date();
       shiftStartTime.setHours(h, m, 0, 0);
+      isAfternoon = true;
+    }
+
+    // Kiểm tra giới hạn cấp số
+    if (area.hasIssueLimit) {
+      const limit = (area.ticketResetType === 'PER_SHIFT' && isAfternoon) 
+        ? area.issueLimitAfternoon 
+        : area.issueLimitMorning;
+
+      if (limit > 0) {
+        // Đếm số lượng vé đã cấp trong ca hiện tại
+        const ticketsIssuedInShift = await prisma.ticket.count({
+          where: {
+            areaId: Number(areaId),
+            issuedAt: {
+              gte: shiftStartTime,
+            }
+          }
+        });
+
+        if (ticketsIssuedInShift >= limit) {
+          return NextResponse.json({ 
+            success: false, 
+            error: `Khu vực này đã đạt giới hạn tiếp nhận bệnh nhân (${limit} số). Vui lòng quay lại vào ca làm việc sau!` 
+          }, { status: 403 });
+        }
+      }
     }
 
     // Kiểm tra xem SĐT này đã có số Đang chờ trong ca này chưa
@@ -118,6 +154,13 @@ export async function POST(req: Request) {
         status: 'WAITING',
         phoneNumber: phoneNumber || null,
       },
+    });
+
+    // Bắn event để thông báo cho màn hình Tivi cập nhật hàng đợi
+    eventEmitter.emit('call-ticket', {
+      type: 'issue',
+      areaId: Number(areaId),
+      ticketNumber: newTicket.ticketNumber
     });
 
     // Đếm số người đang chờ trước người này (các vé lấy trước đó trong cùng ca)

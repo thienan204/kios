@@ -42,7 +42,7 @@ function renderConfig() {
     <div class="p-6 h-full flex flex-col justify-center bg-gray-100">
       <h2 class="text-xl font-bold text-center text-blue-800 mb-6">CẤU HÌNH BÀN TIẾP ĐÓN</h2>
       
-      <label class="block text-sm font-semibold mb-1">URL Máy chủ (Kèm port):</label>
+      <label id="secretUnlockLabel" class="block text-sm font-semibold mb-1 select-none cursor-default">URL Máy chủ (Kèm port):</label>
       <div class="flex gap-2 mb-4">
         <input id="serverUrlInput" type="text" value="${serverUrl}" class="flex-1 p-2 border rounded bg-gray-200 text-gray-500 cursor-not-allowed focus:outline-none" readonly title="Cấu hình hệ thống mặc định (Không thể sửa)" />
         <button id="loadDesksBtn" class="bg-blue-100 hover:bg-blue-200 text-blue-700 text-sm font-semibold px-3 rounded border border-blue-300 transition-colors cursor-pointer">Tải lại</button>
@@ -172,6 +172,23 @@ function renderConfig() {
     }
   });
 
+  let clickCount = 0;
+  let clickTimer: any = null;
+  
+  document.getElementById('secretUnlockLabel')?.addEventListener('click', () => {
+    clickCount++;
+    if (clickCount >= 3) {
+      serverUrlInput.removeAttribute('readonly');
+      serverUrlInput.classList.remove('bg-gray-200', 'text-gray-500', 'cursor-not-allowed');
+      serverUrlInput.classList.add('bg-white', 'text-black', 'focus:ring-2', 'focus:ring-blue-500');
+      configMsg.textContent = '🔓 Đã mở khóa cấu hình URL Máy chủ!';
+      configMsg.className = 'text-center text-sm font-bold text-orange-600 mt-2 h-4';
+      clickCount = 0;
+    }
+    clearTimeout(clickTimer);
+    clickTimer = setTimeout(() => { clickCount = 0; }, 1000);
+  });
+
   saveConfigBtn?.addEventListener('click', () => {
     const sUrl = serverUrlInput.value.replace(/\/$/, "");
     const dId = deskIdSelect.value;
@@ -212,6 +229,7 @@ function renderApp() {
           ${localStorage.getItem('kiosk_desk_name') || `BÀN SỐ ${currentDeskId}`}
         </span>
         <div class="flex gap-2">
+          <button id="pauseIssueBtn" class="text-[10px] bg-slate-600 border border-slate-500 text-white px-2 py-1 rounded hover:bg-slate-500 transition-colors hidden" title="Tạm dừng cấp số cho toàn khu vực">Đang tải...</button>
           <button id="toggleSpecificBtn" class="text-xs bg-blue-600 border border-blue-500 text-white px-2 py-1 rounded hover:bg-blue-500 transition-colors" title="Gọi số chỉ định thủ công">+ Số</button>
           <button id="configBtn" class="text-xs bg-white text-blue-800 px-2 py-1 rounded hover:bg-gray-200 transition-colors">Đổi</button>
         </div>
@@ -287,8 +305,78 @@ function renderApp() {
   const pauseBtn = document.getElementById('pauseBtn') as HTMLButtonElement;
   pauseBtn?.addEventListener('click', pauseTicket);
 
+  const pauseIssueBtn = document.getElementById('pauseIssueBtn') as HTMLButtonElement;
+  pauseIssueBtn?.addEventListener('click', togglePauseIssue);
+
+  // Lấy trạng thái Tạm dừng cấp số của khu vực
+  fetchAreaStatus();
+
   // Lấy số đang gọi hiện tại
   fetchCurrentTicket();
+}
+
+let isIssuePaused = false;
+let currentAreaId = localStorage.getItem('kiosk_area_id');
+
+async function fetchAreaStatus() {
+  if (!currentAreaId) return;
+  const btn = document.getElementById('pauseIssueBtn');
+  if (!btn) return;
+
+  try {
+    const res = await fetch(`${serverUrl}/api/areas/${currentAreaId}/pause-issue`);
+    if (res.ok) {
+      const data = await res.json();
+      isIssuePaused = data.isIssuePaused || false;
+      updatePauseIssueBtnUI();
+      btn.classList.remove('hidden');
+    }
+  } catch (err) {
+    console.error('Không thể lấy trạng thái khu vực', err);
+  }
+}
+
+function updatePauseIssueBtnUI() {
+  const btn = document.getElementById('pauseIssueBtn');
+  if (!btn) return;
+  if (isIssuePaused) {
+    btn.textContent = '⏸ Đang DỪNG cấp số';
+    btn.className = 'text-[10px] bg-red-600 font-bold border border-red-500 text-white px-2 py-1 rounded hover:bg-red-500 transition-colors animate-pulse';
+  } else {
+    btn.textContent = 'Tạm dừng cấp số';
+    btn.className = 'text-[10px] bg-slate-600 border border-slate-500 text-white px-2 py-1 rounded hover:bg-slate-500 transition-colors';
+  }
+}
+
+async function togglePauseIssue() {
+  if (!currentAreaId) return;
+  const statusMsg = document.getElementById('statusMsg')!;
+  const btn = document.getElementById('pauseIssueBtn') as HTMLButtonElement;
+  if (btn) btn.disabled = true;
+
+  try {
+    const res = await fetch(`${serverUrl}/api/areas/${currentAreaId}/pause-issue`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ isPaused: !isIssuePaused }),
+    });
+
+    if (res.ok) {
+      isIssuePaused = !isIssuePaused;
+      updatePauseIssueBtnUI();
+      statusMsg.textContent = isIssuePaused ? 'Đã tạm dừng cấp số cho khu vực này!' : 'Đã mở lại cấp số!';
+      statusMsg.className = `mt-4 text-sm font-semibold text-center h-5 ${isIssuePaused ? 'text-orange-600' : 'text-green-600'}`;
+    } else {
+      statusMsg.textContent = 'Lỗi cập nhật trạng thái';
+      statusMsg.className = "mt-4 text-sm font-semibold text-center h-5 text-red-500";
+    }
+  } catch (err) {
+    statusMsg.textContent = 'Lỗi kết nối máy chủ';
+    statusMsg.className = "mt-4 text-sm font-semibold text-center h-5 text-red-500";
+  } finally {
+    if (btn) btn.disabled = false;
+    setTimeout(() => { statusMsg.textContent = ''; }, 3000);
+  }
 }
 
 async function fetchCurrentTicket() {

@@ -43,6 +43,11 @@ export default function AdminLayout({
       label: <Link href="/admin">Hướng dẫn sử dụng</Link>,
     },
     {
+      key: '/admin/area-groups',
+      icon: <AppstoreOutlined />,
+      label: <Link href="/admin/area-groups">Danh mục Nhóm / Cơ sở</Link>,
+    },
+    {
       key: '/admin/areas',
       icon: <AppstoreOutlined />,
       label: <Link href="/admin/areas">Quản lý Khu vực</Link>,

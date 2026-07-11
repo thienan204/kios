@@ -5,6 +5,7 @@ export async function GET() {
   try {
     const areas = await prisma.area.findMany({
       orderBy: { id: 'asc' },
+      include: { group: true }
     });
     return NextResponse.json(areas);
   } catch (error) {
@@ -18,6 +19,7 @@ export async function POST(req: Request) {
     const newArea = await prisma.area.create({
       data: {
         name: body.name,
+        groupId: body.groupId || null,
         startTime: body.startTime,
         endTime: body.endTime,
         afternoonStartTime: body.afternoonStartTime,
@@ -27,6 +29,10 @@ export async function POST(req: Request) {
         printGreeting: body.printGreeting,
         printFooter: body.printFooter,
         ticketResetType: body.ticketResetType || 'ALL_DAY',
+        hasIssueLimit: body.hasIssueLimit || false,
+        issueLimitMorning: body.issueLimitMorning || 0,
+        issueLimitAfternoon: body.issueLimitAfternoon || 0,
+        kioskPin: body.kioskPin || '123456',
       },
     });
     return NextResponse.json(newArea);

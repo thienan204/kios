@@ -428,7 +428,7 @@ export default function AudioPage({ params }: { params: Promise<{ id: string }> 
             </div>
             
             <p className="text-sm text-gray-500 font-semibold mb-2 flex items-center">
-              <SettingOutlined className="mr-2" /> Tốc độ đọc
+              <SettingOutlined className="mr-2" /> Tốc độ đọc ({speechRate.toFixed(2)}x)
             </p>
             <div className="flex items-center justify-between mb-4">
               <span className="text-xs text-gray-400 font-medium w-12">Chậm</span>

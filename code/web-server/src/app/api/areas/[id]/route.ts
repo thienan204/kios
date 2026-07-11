@@ -25,6 +25,7 @@ export async function PUT(req: Request, context: { params: Promise<{ id: string 
       where: { id: Number(id) },
       data: {
         name: body.name,
+        groupId: body.groupId || null,
         startTime: body.startTime,
         endTime: body.endTime,
         afternoonStartTime: body.afternoonStartTime,
@@ -34,6 +35,10 @@ export async function PUT(req: Request, context: { params: Promise<{ id: string 
         printGreeting: body.printGreeting,
         printFooter: body.printFooter,
         ticketResetType: body.ticketResetType,
+        hasIssueLimit: body.hasIssueLimit,
+        issueLimitMorning: body.issueLimitMorning,
+        issueLimitAfternoon: body.issueLimitAfternoon,
+        kioskPin: body.kioskPin,
       },
     });
     return NextResponse.json(updatedArea);

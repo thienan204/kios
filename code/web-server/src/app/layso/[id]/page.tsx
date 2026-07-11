@@ -2,7 +2,8 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams } from 'next/navigation';
-import { message, QRCode } from 'antd';
+import { message, QRCode, Modal, InputNumber, Button, Input } from 'antd';
+import { PrinterOutlined, LockOutlined } from '@ant-design/icons';
 
 export default function KioskPage() {
   const params = useParams();
@@ -15,6 +16,11 @@ export default function KioskPage() {
   const [areaUid, setAreaUid] = useState<string | null>(null);
   const [imageVersion, setImageVersion] = useState('');
   const [mounted, setMounted] = useState(false);
+
+  const [isBatchModalVisible, setIsBatchModalVisible] = useState(false);
+  const [batchQuantity, setBatchQuantity] = useState(10);
+  const [pinCode, setPinCode] = useState('');
+  const [isBatching, setIsBatching] = useState(false);
 
   useEffect(() => {
     setImageVersion(`?v=${Date.now()}`);
@@ -158,6 +164,35 @@ export default function KioskPage() {
     }
   };
 
+  const handleBatchPrint = async () => {
+    if (!areaId || batchQuantity < 1) return;
+    if (!pinCode) {
+      message.error('Vui lòng nhập mã PIN nhân viên!');
+      return;
+    }
+    
+    setIsBatching(true);
+    try {
+      const res = await fetch(`/api/areas/${areaId}/batch-issue`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ quantity: batchQuantity, pinCode })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setIsBatchModalVisible(false);
+        sessionStorage.setItem('batch_tickets', JSON.stringify(data.tickets));
+        window.open('/print-batch', '_blank');
+      } else {
+        message.error(data.error || 'Có lỗi xảy ra');
+      }
+    } catch (e) {
+      message.error('Lỗi kết nối máy chủ');
+    } finally {
+      setIsBatching(false);
+    }
+  };
+
   if (isLockedOut) {
     return (
       <div className="h-screen w-full flex flex-col items-center justify-center bg-gray-900 p-8">
@@ -258,7 +293,60 @@ export default function KioskPage() {
             />
           )}
         </div>
+        
+        {/* Vùng bấm ẩn dành cho nhân viên (Góc dưới bên trái) */}
+        <div 
+          className="absolute bottom-0 left-0 w-20 h-20 opacity-0 cursor-pointer z-50"
+          onClick={() => {
+            setPinCode('');
+            setIsBatchModalVisible(true);
+          }}
+          title="Chỉ dành cho nhân viên"
+        />
       </div>
+
+      <Modal
+        title={
+          <div className="flex items-center gap-2 text-blue-700">
+            <LockOutlined /> Nhập Mã PIN Nhân Viên
+          </div>
+        }
+        open={isBatchModalVisible}
+        onCancel={() => setIsBatchModalVisible(false)}
+        footer={[
+          <Button key="cancel" onClick={() => setIsBatchModalVisible(false)}>Hủy</Button>,
+          <Button key="submit" type="primary" loading={isBatching} onClick={handleBatchPrint}>Tạo & In</Button>
+        ]}
+      >
+        <div className="py-4">
+          <p className="mb-4 text-red-500 font-semibold">Tính năng này đã bị khóa để tránh bệnh nhân bấm nhầm. Vui lòng nhập mã PIN nhân viên (Mặc định: 123456).</p>
+          
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <span className="font-semibold">Mã PIN:</span>
+              <Input.Password 
+                value={pinCode}
+                onChange={(e) => setPinCode(e.target.value)}
+                placeholder="Nhập mã PIN"
+                className="w-48"
+                size="large"
+              />
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <span className="font-semibold">Số lượng phiếu muốn in:</span>
+              <InputNumber 
+                min={1} 
+                max={200}
+                value={batchQuantity} 
+                onChange={(val) => setBatchQuantity(val || 10)} 
+                className="w-48"
+                size="large"
+              />
+            </div>
+          </div>
+        </div>
+      </Modal>
 
       {/* KHU VỰC CHUẨN BỊ IN (Bình thường ẩn, chỉ hiện trên giấy in K80) */}
       {/* 

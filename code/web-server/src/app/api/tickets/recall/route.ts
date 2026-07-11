@@ -39,6 +39,12 @@ export async function POST(req: Request) {
       });
     }
 
+    // Cập nhật lại thời gian gọi để Tivi hiển thị đúng số vừa được gọi lại (lên vị trí ưu tiên nhất)
+    await prisma.ticket.update({
+      where: { id: currentTicket.id },
+      data: { calledAt: new Date() }
+    });
+
     const audioCount = activeAudioClients.get(currentTicket.areaId) || 0;
     if (audioCount === 0) {
       return NextResponse.json({ error: 'Cảnh báo: Chưa mở Trạm phát âm thanh. Vui lòng bật trang Audio để phát lại!' }, { status: 400 });
