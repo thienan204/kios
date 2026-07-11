@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Upload, Button, message, Card, Typography, Divider } from 'antd';
-import { UploadOutlined, PictureOutlined } from '@ant-design/icons';
+import React, { useState, useEffect } from 'react';
+import { Upload, Button, message, Card, Typography, Divider, Select } from 'antd';
+import { UploadOutlined, PictureOutlined, PhoneOutlined, SaveOutlined } from '@ant-design/icons';
 import type { UploadFile, UploadProps } from 'antd/es/upload/interface';
 
 const { Title, Text } = Typography;
@@ -12,6 +12,50 @@ export default function SettingsPage() {
   const [bannerFileList, setBannerFileList] = useState<UploadFile[]>([]);
   const [logoUrl, setLogoUrl] = useState<string>('/logo.png');
   const [bannerUrl, setBannerUrl] = useState<string>('/banner.png');
+  const [imageTimestamp, setImageTimestamp] = useState<string>('');
+
+  useEffect(() => {
+    setImageTimestamp(`?v=${Date.now()}`);
+  }, []);
+
+  const [validPrefixes, setValidPrefixes] = useState<string[]>([]);
+  const [savingPrefixes, setSavingPrefixes] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/settings')
+      .then(res => res.json())
+      .then(data => {
+        if (data.validPhonePrefixes) {
+          try {
+            const arr = JSON.parse(data.validPhonePrefixes);
+            setValidPrefixes(Array.isArray(arr) ? arr.map((v: string) => v.trim()).filter(Boolean) : []);
+          } catch (e) {
+            console.error('Error parsing validPhonePrefixes', e);
+          }
+        }
+      })
+      .catch(err => console.error('Error fetching settings', err));
+  }, []);
+
+  const handleSavePrefixes = async () => {
+    setSavingPrefixes(true);
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ validPhonePrefixes: JSON.stringify(validPrefixes) })
+      });
+      if (res.ok) {
+        message.success('Đã lưu cấu hình đầu số!');
+      } else {
+        message.error('Lỗi khi lưu cấu hình');
+      }
+    } catch (err) {
+      message.error('Lỗi kết nối máy chủ');
+    } finally {
+      setSavingPrefixes(false);
+    }
+  };
 
   const customUpload = async (options: any, type: 'logo' | 'banner') => {
     const { file, onSuccess, onError } = options;
@@ -29,8 +73,14 @@ export default function SettingsPage() {
       const data = await res.json();
       if (res.ok && data.success) {
         message.success(`Tải ${type} lên thành công!`);
-        if (type === 'logo') setLogoUrl(data.url);
-        if (type === 'banner') setBannerUrl(data.url);
+        if (type === 'logo') {
+          setLogoUrl(data.url);
+          setImageTimestamp(`?v=${Date.now()}`);
+        }
+        if (type === 'banner') {
+          setBannerUrl(data.url);
+          setImageTimestamp(`?v=${Date.now()}`);
+        }
         onSuccess('ok');
       } else {
         message.error(data.message || 'Lỗi tải ảnh');
@@ -77,7 +127,7 @@ export default function SettingsPage() {
           
           <div className="mb-6 p-4 bg-gray-50 border border-gray-200 rounded flex justify-center items-center min-h-[120px]">
             <img 
-              src={`${logoUrl}?v=${Date.now()}`} // Force reload to show current image
+              src={`${logoUrl}${imageTimestamp}`} // Force reload to show current image
               alt="Current Logo" 
               className="max-h-20 object-contain"
               onError={(e) => {
@@ -105,7 +155,7 @@ export default function SettingsPage() {
           
           <div className="mb-6 p-4 bg-gray-50 border border-gray-200 rounded flex justify-center items-center min-h-[120px]">
             <img 
-              src={`${bannerUrl}?v=${Date.now()}`} // Force reload
+              src={`${bannerUrl}${imageTimestamp}`} // Force reload
               alt="Current Banner" 
               className="max-h-20 object-contain"
               onError={(e) => {
@@ -121,8 +171,39 @@ export default function SettingsPage() {
             <Button icon={<UploadOutlined />}>Tải Banner mới lên</Button>
           </Upload>
         </Card>
-
       </div>
+
+      <Divider />
+
+      <Title level={4} className="mb-4">Cấu hình Hệ Thống</Title>
+      
+      <Card 
+        title={<><PhoneOutlined /> Đầu Số Điện Thoại Hợp Lệ</>} 
+        className="shadow-sm max-w-2xl"
+      >
+        <Text type="secondary" className="block mb-4">
+          Danh sách các đầu số nhà mạng cho phép người bệnh nhập khi đăng ký khám tại Kiosk di động. (Ví dụ: 098, 036, 091...)
+        </Text>
+        
+        <Select
+          mode="tags"
+          style={{ width: '100%', marginBottom: '16px' }}
+          placeholder="Nhập và ấn Enter để thêm đầu số mới"
+          value={validPrefixes}
+          onChange={(vals) => setValidPrefixes(vals.map((v: string) => v.trim()).filter(Boolean))}
+          tokenSeparators={[',']}
+        />
+
+        <Button 
+          type="primary" 
+          icon={<SaveOutlined />} 
+          onClick={handleSavePrefixes}
+          loading={savingPrefixes}
+        >
+          Lưu Đầu Số
+        </Button>
+      </Card>
+
     </div>
   );
 }

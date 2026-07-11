@@ -20,7 +20,17 @@ export async function GET(
       );
     }
 
-    return NextResponse.json(area);
+    // @ts-ignore
+    const setting = await prisma.systemSetting.findUnique({
+      where: { key: 'validPhonePrefixes' }
+    }).catch(() => null);
+
+    const validPhonePrefixes = setting ? JSON.parse(setting.value) : null;
+
+    return NextResponse.json({
+      ...area,
+      validPhonePrefixes
+    });
   } catch (error) {
     console.error('Lỗi khi lấy thông tin khu vực theo uid:', error);
     return NextResponse.json(

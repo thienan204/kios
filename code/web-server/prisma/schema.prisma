@@ -87,3 +87,8 @@ enum TicketStatus {
   COMPLETED
   SKIPPED
 }
+
+model SystemSetting {
+  key   String @id
+  value String
+}

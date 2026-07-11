@@ -21,6 +21,7 @@ export default function MobileKioskPage() {
   const [speechSupported, setSpeechSupported] = useState(false);
   const recognitionRef = useRef<any>(null);
   const initialPhoneNumberRef = useRef('');
+  const validPrefixesRef = useRef<string[]>([]);
   
   const [ticketData, setTicketData] = useState<{
     number: number;
@@ -63,7 +64,16 @@ export default function MobileKioskPage() {
 
           const digits = transcript.replace(/[^0-9]/g, '');
           if (digits || initialPhoneNumberRef.current) {
-            const combined = initialPhoneNumberRef.current + digits;
+            let combined = initialPhoneNumberRef.current + digits;
+            if (combined.length >= 3) {
+              const prefix = combined.substring(0, 3);
+              const isValid = validPrefixesRef.current.length === 0 || validPrefixesRef.current.includes(prefix);
+              if (!isValid) {
+                message.destroy();
+                message.warning('Đầu số mạng không hợp lệ (vd: 098, 036...)');
+                combined = combined.substring(0, 3);
+              }
+            }
             setPhoneNumber(combined.slice(0, 10));
           }
 
@@ -124,6 +134,9 @@ export default function MobileKioskPage() {
           const data = await res.json();
           if (data.name) setAreaName(data.name);
           if (data.id) setAreaId(data.id);
+          if (data.validPhonePrefixes) {
+            validPrefixesRef.current = data.validPhonePrefixes;
+          }
         } else {
           setErrorMsg('Khu vực không tồn tại');
         }
@@ -255,7 +268,20 @@ export default function MobileKioskPage() {
               maxLength={10}
               placeholder="Ví dụ: 0912345678"
               value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value.replace(/[^0-9]/g, ''))}
+              onChange={(e) => {
+                const val = e.target.value.replace(/[^0-9]/g, '');
+                if (val.length >= 3) {
+                  const prefix = val.substring(0, 3);
+                  const isValid = validPrefixesRef.current.length === 0 || validPrefixesRef.current.includes(prefix);
+                  if (!isValid) {
+                    message.destroy();
+                    message.warning('Đầu số mạng không hợp lệ (vd: 098, 036...)');
+                    setPhoneNumber(val.substring(0, 3));
+                    return;
+                  }
+                }
+                setPhoneNumber(val);
+              }}
               autoComplete="off"
               allowClear
               className="text-xl font-bold h-14 rounded-xl [&>input]:text-center"
