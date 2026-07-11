@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { message, Input, Button } from 'antd';
-import { DownloadOutlined, SyncOutlined } from '@ant-design/icons';
+import { DownloadOutlined, SyncOutlined, AudioOutlined } from '@ant-design/icons';
 import { toPng } from 'html-to-image';
 
 export default function MobileKioskPage() {
@@ -16,6 +16,11 @@ export default function MobileKioskPage() {
   const [imageVersion, setImageVersion] = useState('');
   
   const [phoneNumber, setPhoneNumber] = useState('');
+  
+  const [isListening, setIsListening] = useState(false);
+  const [speechSupported, setSpeechSupported] = useState(false);
+  const recognitionRef = useRef<any>(null);
+  const initialPhoneNumberRef = useRef('');
   
   const [ticketData, setTicketData] = useState<{
     number: number;
@@ -35,7 +40,76 @@ export default function MobileKioskPage() {
   useEffect(() => {
     setIsHydrated(true);
     setImageVersion(`?v=${Date.now()}`);
+
+    if (typeof window !== 'undefined') {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        setSpeechSupported(true);
+        const recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.lang = 'vi-VN';
+        recognition.interimResults = true;
+
+        recognition.onresult = (event: any) => {
+          let transcript = '';
+          let isFinal = false;
+
+          for (let i = event.resultIndex; i < event.results.length; ++i) {
+            transcript += event.results[i][0].transcript;
+            if (event.results[i].isFinal) {
+              isFinal = true;
+            }
+          }
+
+          const digits = transcript.replace(/[^0-9]/g, '');
+          if (digits || initialPhoneNumberRef.current) {
+            const combined = initialPhoneNumberRef.current + digits;
+            setPhoneNumber(combined.slice(0, 10));
+          }
+
+          if (isFinal) {
+            setIsListening(false);
+            if (digits) {
+              message.success('Đã nhận diện xong!');
+            }
+          }
+        };
+
+        recognition.onerror = (event: any) => {
+          console.error('Lỗi nhận diện giọng nói:', event.error);
+          if (event.error === 'not-allowed') {
+             message.error('Vui lòng cấp quyền sử dụng Micro.');
+          } else {
+             message.error('Lỗi nhận diện giọng nói. Vui lòng thử lại.');
+          }
+          setIsListening(false);
+        };
+
+        recognition.onend = () => {
+          setIsListening(false);
+        };
+
+        recognitionRef.current = recognition;
+      }
+    }
   }, []);
+
+  const handleListen = () => {
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+      return;
+    }
+    
+    try {
+      initialPhoneNumberRef.current = phoneNumber;
+      recognitionRef.current?.start();
+      setIsListening(true);
+      message.info('Đang lắng nghe... Vui lòng đọc tiếp số điện thoại.');
+    } catch (e) {
+      console.error('Lỗi bắt đầu nhận diện:', e);
+    }
+  };
 
   useEffect(() => {
     if (!uid) {
@@ -183,7 +257,19 @@ export default function MobileKioskPage() {
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value.replace(/[^0-9]/g, ''))}
               autoComplete="off"
-              className="text-xl text-center font-bold h-14 rounded-xl"
+              allowClear
+              className="text-xl font-bold h-14 rounded-xl [&>input]:text-center"
+              suffix={
+                speechSupported && (
+                  <Button 
+                    type="text"
+                    shape="circle" 
+                    icon={<AudioOutlined className={isListening ? 'animate-pulse text-red-500 text-xl' : 'text-blue-600 text-xl'} />} 
+                    onClick={handleListen}
+                    className={`flex items-center justify-center ml-1 ${isListening ? 'bg-red-50' : 'hover:bg-blue-50'}`}
+                  />
+                )
+              }
             />
           </div>
 
