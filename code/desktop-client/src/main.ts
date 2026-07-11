@@ -62,19 +62,19 @@ function renderConfig() {
       <div class="grid grid-cols-2 gap-2 mb-6 text-sm">
         <div>
           <span class="text-xs text-gray-500">Gọi tiếp theo</span>
-          <input id="scCallNext" type="text" class="w-full p-1 border rounded" value="${getShortcuts().callNext}" />
+          <input id="scCallNext" type="text" class="w-full p-1 border rounded shortcut-input" placeholder="Nhấn phím..." readonly value="${getShortcuts().callNext}" />
         </div>
         <div>
           <span class="text-xs text-gray-500">Gọi lại số</span>
-          <input id="scRecall" type="text" class="w-full p-1 border rounded" value="${getShortcuts().recall}" />
+          <input id="scRecall" type="text" class="w-full p-1 border rounded shortcut-input" placeholder="Nhấn phím..." readonly value="${getShortcuts().recall}" />
         </div>
         <div>
           <span class="text-xs text-gray-500">Bỏ qua luôn</span>
-          <input id="scSkip" type="text" class="w-full p-1 border rounded" value="${getShortcuts().skip}" />
+          <input id="scSkip" type="text" class="w-full p-1 border rounded shortcut-input" placeholder="Nhấn phím..." readonly value="${getShortcuts().skip}" />
         </div>
         <div>
           <span class="text-xs text-gray-500">Kết thúc phiên</span>
-          <input id="scPause" type="text" class="w-full p-1 border rounded" value="${getShortcuts().pause}" />
+          <input id="scPause" type="text" class="w-full p-1 border rounded shortcut-input" placeholder="Nhấn phím..." readonly value="${getShortcuts().pause}" />
         </div>
       </div>
       
@@ -92,6 +92,40 @@ function renderConfig() {
 
   const areaIdSelect = document.getElementById('areaIdSelect') as HTMLSelectElement;
   let allDesks: any[] = [];
+
+  // Xử lý sự kiện nhấn phím cho các ô cấu hình phím tắt
+  const shortcutInputs = document.querySelectorAll<HTMLInputElement>('.shortcut-input');
+  shortcutInputs.forEach(input => {
+    input.addEventListener('keydown', (e) => {
+      e.preventDefault();
+      
+      const keys = [];
+      if (e.ctrlKey) keys.push('Ctrl');
+      if (e.altKey) keys.push('Alt');
+      if (e.shiftKey) keys.push('Shift');
+      if (e.metaKey) keys.push('Command');
+      
+      // Bỏ qua nếu chỉ nhấn phím modifier
+      if (['Control', 'Alt', 'Shift', 'Meta'].includes(e.key)) {
+        input.value = keys.join('+') + '+...';
+        return;
+      }
+      
+      let keyName = e.key;
+      if (keyName === ' ') keyName = 'Space';
+      if (keyName.length === 1) keyName = keyName.toUpperCase();
+      
+      keys.push(keyName);
+      input.value = keys.join('+');
+    });
+
+    // Cho phép dùng phím Backspace/Delete để xóa phím tắt
+    input.addEventListener('keyup', (e) => {
+      if (e.key === 'Backspace' || e.key === 'Delete') {
+        input.value = '';
+      }
+    });
+  });
 
   function renderDesksForArea(areaId: string | number) {
     const filteredDesks = allDesks.filter(d => String(d.area?.id || d.areaId) === String(areaId));
