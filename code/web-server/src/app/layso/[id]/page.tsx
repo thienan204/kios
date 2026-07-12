@@ -286,7 +286,7 @@ export default function KioskPage() {
           </p>
           {mounted && areaUid && (
             <QRCode 
-              value={`${process.env.NEXT_PUBLIC_SERVER_URL || window.location.origin}/m/${areaUid}`} 
+              value={`${(process.env.NEXT_PUBLIC_SERVER_URL || window.location.origin).replace(/\/kios\/?$/, '')}/kios/m/${areaUid}`} 
               size={120} 
               color="#1e3a8a" 
               bordered={false} 
