@@ -28,7 +28,7 @@ export default function PrintBatchPage() {
   }, []);
 
   return (
-    <div className="bg-gray-100 min-h-screen flex flex-col items-center py-8 print:py-0 print:bg-white">
+    <div className="bg-gray-100 min-h-screen flex flex-col items-center py-8 print:py-0 print:bg-white print:min-h-0 print:block">
       <div className="print:hidden mb-4 bg-white p-4 rounded shadow">
         <p className="font-bold text-lg">Đang chuẩn bị in {tickets.length} phiếu...</p>
         <p className="text-sm text-gray-500">Hộp thoại in sẽ tự động hiện lên. Hoặc bạn có thể bấm Ctrl+P.</p>

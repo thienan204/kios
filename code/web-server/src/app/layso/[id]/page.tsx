@@ -224,9 +224,9 @@ export default function KioskPage() {
   }
 
   return (
-    <div className="h-screen w-full flex flex-col items-center justify-center bg-blue-50 overflow-hidden">
+    <>
       {/* KHU VỰC HIỂN THỊ TRÊN MÀN HÌNH (Sẽ ẩn khi in) */}
-      <div className="flex flex-col items-center justify-center print:hidden w-full h-full p-8">
+      <div className="h-screen w-full flex flex-col items-center justify-center bg-blue-50 overflow-hidden print:hidden p-8">
         
         {/* KHU VỰC LOGO & BANNER */}
         <div className="w-full max-w-7xl mb-10 flex flex-col md:flex-row items-center justify-between gap-6 px-4">
@@ -353,33 +353,11 @@ export default function KioskPage() {
         </div>
       </Modal>
 
-      {/* KHU VỰC CHUẨN BỊ IN (Bình thường ẩn, chỉ hiện trên giấy in K80) */}
-      {/* 
-        Giấy K80 có chiều rộng 80mm (~3inch).
-        Để in đẹp, ta thiết kế 1 div có width cố định và dùng CSS @media print để ẩn các thành phần khác.
-      */}
-      <style dangerouslySetInnerHTML={{__html: `
-        @media print {
-          @page { margin: 0; }
-          body * {
-            visibility: hidden;
-          }
-          #print-area, #print-area * {
-            visibility: visible;
-          }
-          #print-area {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            padding: 0;
-            margin: 0;
-          }
-        }
-      `}} />
+      </div>
 
+      {/* KHU VỰC CHUẨN BỊ IN (Chỉ hiện khi in) */}
       {ticketData && (
-        <div id="print-area" ref={printRef} className="hidden print:block w-full text-center font-sans text-black bg-white px-2 py-4">
+        <div id="print-area" ref={printRef} className="hidden print:block w-full max-w-[80mm] mx-auto text-center font-sans text-black bg-white px-1 py-2">
           <h2 className="text-lg font-bold uppercase mb-1">{ticketData.area}</h2>
           {ticketData.printHospitalName && (
             <p className="text-xs mb-2">{ticketData.printHospitalName}</p>
@@ -400,6 +378,6 @@ export default function KioskPage() {
           )}
         </div>
       )}
-    </div>
+    </>
   );
 }
