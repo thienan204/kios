@@ -12,7 +12,7 @@ docker-compose up -d --build
 
 echo "[3/3] Cập nhật cấu trúc Database (Prisma push)..."
 # Chạy db push không cần interactive (-it) để script không bị lỗi môi trường
-docker exec kiosklayso-web npx prisma db push
+docker exec kiosklayso-web npx prisma@6.3.0 db push
 
 echo "======================================"
 echo "       CẬP NHẬT THÀNH CÔNG!           "
