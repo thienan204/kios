@@ -84,7 +84,7 @@ export async function POST(req: Request) {
       type: 'call',
       areaId: calledTicket.areaId,
       ticketNumber: calledTicket.ticketNumber,
-      deskName: calledTicket.desk.name,
+      deskName: calledTicket.desk?.name || 'Chưa phân quầy',
       audioTemplate: calledTicket.area.audioTemplate
     });
 
