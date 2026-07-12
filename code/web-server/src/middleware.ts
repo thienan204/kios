@@ -12,7 +12,7 @@ export async function middleware(request: NextRequest) {
     const token = request.cookies.get('admin_token')?.value;
 
     if (!token) {
-      return NextResponse.redirect(new URL('/kios/admin/login', request.url));
+      return NextResponse.redirect(`${request.nextUrl.origin}/kios/admin/login`);
     }
 
     try {
@@ -20,7 +20,7 @@ export async function middleware(request: NextRequest) {
       return NextResponse.next();
     } catch (error) {
       // Token is invalid or expired
-      const response = NextResponse.redirect(new URL('/kios/admin/login', request.url));
+      const response = NextResponse.redirect(`${request.nextUrl.origin}/kios/admin/login`);
       response.cookies.delete('admin_token');
       return response;
     }
