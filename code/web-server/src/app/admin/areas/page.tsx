@@ -284,21 +284,27 @@ export default function AreasPage() {
       title: 'Các đường dẫn',
       key: 'path',
       render: (_: any, record: any) => {
-        const kioskPath = `/layso/${record.id}`;
-        const audioPath = `/audio/${record.id}`;
-        const tvPath = `/tv/${record.id}`;
-        const mobilePath = `/m/${record.uid}`;
+        const kioskPath = `/kios/layso/${record.id}`;
+        const audioPath = `/kios/audio/${record.id}`;
+        const tvPath = `/kios/tv/${record.id}`;
+        const mobilePath = `/kios/m/${record.uid}`;
+
+        const getFullUrl = (path: string) => {
+           const base = process.env.NEXT_PUBLIC_SERVER_URL || (typeof window !== 'undefined' ? window.location.origin : '');
+           return base.replace(/\/kios\/?$/, '') + path;
+        };
+
         return (
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2">
               <span className="text-xs font-semibold text-gray-500 w-12">Kiosk:</span>
               <Typography.Text 
-                copyable={{ text: typeof window !== 'undefined' ? `${process.env.NEXT_PUBLIC_SERVER_URL || window.location.origin}${kioskPath}` : kioskPath }}
+                copyable={{ text: getFullUrl(kioskPath) }}
                 className="bg-blue-50 px-2 py-0.5 rounded border border-blue-200 text-blue-700 font-mono text-xs"
               >
                 {kioskPath}
               </Typography.Text>
-              <Button size="small" type="link" href={kioskPath} target="_blank" className="p-0">Mở</Button>
+              <Button size="small" type="link" href={getFullUrl(kioskPath)} target="_blank" className="p-0">Mở</Button>
               {record.kioskDeviceId ? (
                 <Tooltip title="Đang bị khóa bởi 1 máy. Bấm để Mở khóa cho máy mới">
                   <Button size="small" type="primary" danger icon={<UnlockOutlined />} onClick={() => handleUnlock(record.id, 'kiosk')} loading={unlocking} />
@@ -313,12 +319,12 @@ export default function AreasPage() {
             <div className="flex items-center gap-2">
               <span className="text-xs font-semibold text-gray-500 w-12">Audio:</span>
               <Typography.Text 
-                copyable={{ text: typeof window !== 'undefined' ? `${process.env.NEXT_PUBLIC_SERVER_URL || window.location.origin}${audioPath}` : audioPath }}
+                copyable={{ text: getFullUrl(audioPath) }}
                 className="bg-green-50 px-2 py-0.5 rounded border border-green-200 text-green-700 font-mono text-xs"
               >
                 {audioPath}
               </Typography.Text>
-              <Button size="small" type="link" href={audioPath} target="_blank" className="p-0 text-green-600">Mở</Button>
+              <Button size="small" type="link" href={getFullUrl(audioPath)} target="_blank" className="p-0 text-green-600">Mở</Button>
               {record.audioDeviceId ? (
                 <Tooltip title="Đang bị khóa bởi 1 máy. Bấm để Mở khóa cho máy mới">
                   <Button size="small" type="primary" danger icon={<UnlockOutlined />} onClick={() => handleUnlock(record.id, 'audio')} loading={unlocking} />
@@ -333,23 +339,23 @@ export default function AreasPage() {
             <div className="flex items-center gap-2">
               <span className="text-xs font-semibold text-gray-500 w-12">Tivi:</span>
               <Typography.Text 
-                copyable={{ text: typeof window !== 'undefined' ? `${process.env.NEXT_PUBLIC_SERVER_URL || window.location.origin}${tvPath}` : tvPath }}
+                copyable={{ text: getFullUrl(tvPath) }}
                 className="bg-purple-50 px-2 py-0.5 rounded border border-purple-200 text-purple-700 font-mono text-xs"
               >
                 {tvPath}
               </Typography.Text>
-              <Button size="small" type="link" href={tvPath} target="_blank" className="p-0 text-purple-600">Mở</Button>
+              <Button size="small" type="link" href={getFullUrl(tvPath)} target="_blank" className="p-0 text-purple-600">Mở</Button>
             </div>
 
             <div className="flex items-center gap-2">
               <span className="text-xs font-semibold text-gray-500 w-12">Mobile:</span>
               <Typography.Text 
-                copyable={{ text: typeof window !== 'undefined' ? `${process.env.NEXT_PUBLIC_SERVER_URL || window.location.origin}${mobilePath}` : mobilePath }}
+                copyable={{ text: getFullUrl(mobilePath) }}
                 className="bg-orange-50 px-2 py-0.5 rounded border border-orange-200 text-orange-700 font-mono text-xs"
               >
                 {mobilePath}
               </Typography.Text>
-              <Button size="small" type="link" href={mobilePath} target="_blank" className="p-0 text-orange-600">Mở</Button>
+              <Button size="small" type="link" href={getFullUrl(mobilePath)} target="_blank" className="p-0 text-orange-600">Mở</Button>
             </div>
           </div>
         );
@@ -620,7 +626,7 @@ export default function AreasPage() {
               <p className="text-gray-600 mb-6 font-medium">Quét mã QR bằng điện thoại để lấy số</p>
               <div className="flex justify-center bg-white p-4 rounded-xl shadow-sm border border-gray-100">
                 <QRCode 
-                  value={`${process.env.NEXT_PUBLIC_SERVER_URL || (typeof window !== 'undefined' ? window.location.origin : '')}/m/${printArea.uid}`} 
+                  value={`${(process.env.NEXT_PUBLIC_SERVER_URL || (typeof window !== 'undefined' ? window.location.origin : '')).replace(/\/kios\/?$/, '')}/kios/m/${printArea.uid}`} 
                   size={250} 
                   color="#1e3a8a" // text-blue-900
                   errorLevel="H"
