@@ -97,7 +97,7 @@ export async function POST(
       }
     });
 
-    const newTickets = [];
+    const newTickets: any[] = [];
     const generatedData = [];
 
     // Tạo hàng loạt vé
