@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
     const response = NextResponse.json({ success: true });
     response.cookies.set('admin_token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: false, // Allow login over HTTP LAN IP
       sameSite: 'lax',
       maxAge: 60 * 60 * 24, // 1 day
       path: '/',
