@@ -12,7 +12,9 @@ export async function middleware(request: NextRequest) {
     const token = request.cookies.get('admin_token')?.value;
 
     if (!token) {
-      return NextResponse.redirect(new URL('/admin/login', request.url));
+      const loginUrl = request.nextUrl.clone();
+      loginUrl.pathname = '/admin/login';
+      return NextResponse.redirect(loginUrl);
     }
 
     try {
@@ -20,7 +22,9 @@ export async function middleware(request: NextRequest) {
       return NextResponse.next();
     } catch (error) {
       // Token is invalid or expired
-      const response = NextResponse.redirect(new URL('/admin/login', request.url));
+      const loginUrl = request.nextUrl.clone();
+      loginUrl.pathname = '/admin/login';
+      const response = NextResponse.redirect(loginUrl);
       response.cookies.delete('admin_token');
       return response;
     }
