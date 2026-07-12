@@ -10,8 +10,8 @@ const { Title, Text } = Typography;
 export default function SettingsPage() {
   const [logoFileList, setLogoFileList] = useState<UploadFile[]>([]);
   const [bannerFileList, setBannerFileList] = useState<UploadFile[]>([]);
-  const [logoUrl, setLogoUrl] = useState<string>('/logo.png');
-  const [bannerUrl, setBannerUrl] = useState<string>('/banner.png');
+  const [logoUrl, setLogoUrl] = useState<string>('/kios/logo.png');
+  const [bannerUrl, setBannerUrl] = useState<string>('/kios/banner.png');
   const [imageTimestamp, setImageTimestamp] = useState<string>('');
 
   useEffect(() => {

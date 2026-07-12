@@ -242,7 +242,7 @@ export default function MobileKioskPage() {
       {/* KHU VỰC LOGO */}
       <div className="w-full max-w-sm mb-6 flex flex-col items-center gap-4 pt-4">
         <img 
-          src={`/logo.png${imageVersion}`}
+          src={`/kios/logo.png${imageVersion}`}
           alt="Logo Bệnh viện" 
           className="h-16 w-auto object-contain"
           onError={(e) => {

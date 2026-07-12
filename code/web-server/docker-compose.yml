@@ -19,7 +19,12 @@ services:
     # Nếu PostgreSQL cũng chạy bằng Docker trên server thì kết nối qua cùng network
     # networks:
     #   - your_app_network
+    volumes:
+      - kios_public:/app/public
 
 # networks:
 #   your_app_network:
 #     external: true
+
+volumes:
+  kios_public:

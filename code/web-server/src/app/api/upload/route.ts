@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ 
       success: true, 
       message: 'Tải ảnh lên thành công!',
-      url: `/${fileName}?v=${Date.now()}` 
+      url: `/kios/${fileName}?v=${Date.now()}` 
     });
   } catch (error: any) {
     console.error('Lỗi upload file:', error);

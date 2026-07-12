@@ -63,7 +63,12 @@ export default function KioskPage() {
     const claimDevice = async () => {
       let deviceId = localStorage.getItem('kioskDeviceId');
       if (!deviceId) {
-        deviceId = crypto.randomUUID();
+        // Fallback for crypto.randomUUID() in non-secure contexts (HTTP)
+        if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+          deviceId = crypto.randomUUID();
+        } else {
+          deviceId = 'kiosk-' + Date.now() + '-' + Math.random().toString(36).substring(2, 15);
+        }
         localStorage.setItem('kioskDeviceId', deviceId);
       }
 
@@ -226,7 +231,7 @@ export default function KioskPage() {
         {/* KHU VỰC LOGO & BANNER */}
         <div className="w-full max-w-7xl mb-10 flex flex-col md:flex-row items-center justify-between gap-6 px-4">
           <img 
-            src={`/logo.png${imageVersion}`}
+            src={`/kios/logo.png${imageTimestamp}`}
             alt="Logo Bệnh viện" 
             className="h-24 md:h-32 w-auto object-contain"
             onError={(e) => {
@@ -234,7 +239,7 @@ export default function KioskPage() {
             }}
           />
           <img 
-            src={`/banner.png${imageVersion}`}
+            src={`/kios/banner.png${imageTimestamp}`}
             alt="Banner Bệnh viện" 
             className="h-24 md:h-32 w-auto object-contain flex-1 max-w-full md:max-w-[70%]"
             onError={(e) => {
