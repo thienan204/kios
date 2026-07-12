@@ -231,7 +231,7 @@ export default function KioskPage() {
         {/* KHU VỰC LOGO & BANNER */}
         <div className="w-full max-w-7xl mb-10 flex flex-col md:flex-row items-center justify-between gap-6 px-4">
           <img 
-            src={`/kios/logo.png${imageTimestamp}`}
+            src={`/kios/logo.png${imageVersion}`}
             alt="Logo Bệnh viện" 
             className="h-24 md:h-32 w-auto object-contain"
             onError={(e) => {
@@ -239,7 +239,7 @@ export default function KioskPage() {
             }}
           />
           <img 
-            src={`/kios/banner.png${imageTimestamp}`}
+            src={`/kios/banner.png${imageVersion}`}
             alt="Banner Bệnh viện" 
             className="h-24 md:h-32 w-auto object-contain flex-1 max-w-full md:max-w-[70%]"
             onError={(e) => {
