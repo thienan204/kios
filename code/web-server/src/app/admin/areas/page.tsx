@@ -34,7 +34,7 @@ export default function AreasPage() {
   const fetchAreas = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/areas');
+      const res = await fetch('/kios/api/areas');
       const data = await res.json();
       setAreas(data);
     } catch (error) {
@@ -46,7 +46,7 @@ export default function AreasPage() {
 
   const fetchAreaGroups = async () => {
     try {
-      const res = await fetch('/api/area-groups');
+      const res = await fetch('/kios/api/area-groups');
       const data = await res.json();
       setAreaGroups(data);
     } catch (e) {
@@ -87,7 +87,7 @@ export default function AreasPage() {
 
   const handleDelete = async (id: number) => {
     try {
-      const res = await fetch(`/api/areas/${id}`, { method: 'DELETE' });
+      const res = await fetch(`/kios/api/areas/${id}`, { method: 'DELETE' });
       const data = await res.json();
       if (res.ok) {
         message.success('Xóa thành công');
@@ -103,7 +103,7 @@ export default function AreasPage() {
   const handleUnlock = async (areaId: number, deviceType: 'kiosk' | 'audio' | 'tv') => {
     setUnlocking(true);
     try {
-      const res = await fetch(`/api/areas/${areaId}/device-lock?type=${deviceType}`, { method: 'DELETE' });
+      const res = await fetch(`/kios/api/areas/${areaId}/device-lock?type=${deviceType}`, { method: 'DELETE' });
       const data = await res.json();
       if (data.success) {
         message.success(`Đã mở khóa thiết bị ${deviceType.toUpperCase()} thành công`);
@@ -131,7 +131,7 @@ export default function AreasPage() {
     }
     setIsJumping(true);
     try {
-      const res = await fetch(`/api/areas/${jumpAreaId}/jump`, {
+      const res = await fetch(`/kios/api/areas/${jumpAreaId}/jump`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nextNumber: jumpNextNumber })
@@ -152,7 +152,7 @@ export default function AreasPage() {
 
   const handleTogglePause = async (id: number, isPaused: boolean) => {
     try {
-      const res = await fetch(`/api/areas/${id}/pause-issue`, {
+      const res = await fetch(`/kios/api/areas/${id}/pause-issue`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ isPaused })
@@ -181,7 +181,7 @@ export default function AreasPage() {
     }
     setIsBatching(true);
     try {
-      const res = await fetch(`/api/areas/${batchAreaId}/batch-issue`, {
+      const res = await fetch(`/kios/api/areas/${batchAreaId}/batch-issue`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ quantity: batchQuantity })
@@ -223,7 +223,7 @@ export default function AreasPage() {
     };
 
     try {
-      const url = editingId ? `/api/areas/${editingId}` : '/api/areas';
+      const url = editingId ? `/kios/api/areas/${editingId}` : '/kios/api/areas';
       const method = editingId ? 'PUT' : 'POST';
       const res = await fetch(url, {
         method,

@@ -129,7 +129,7 @@ export default function MobileKioskPage() {
 
     const fetchAreaDetails = async () => {
       try {
-        const res = await fetch(`/api/areas/public/${uid}`);
+        const res = await fetch(`/kios/api/areas/public/${uid}`);
         if (res.ok) {
           const data = await res.json();
           if (data.name) setAreaName(data.name);
@@ -163,7 +163,7 @@ export default function MobileKioskPage() {
     setErrorMsg(null);
 
     try {
-      const res = await fetch('/api/tickets/issue', {
+      const res = await fetch('/kios/api/tickets/issue', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ areaId, phoneNumber: phoneNumber.trim() }),

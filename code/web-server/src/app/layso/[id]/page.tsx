@@ -49,7 +49,7 @@ export default function KioskPage() {
 
     const fetchAreaDetails = async () => {
       try {
-        const res = await fetch(`/api/areas/${areaId}`);
+        const res = await fetch(`/kios/api/areas/${areaId}`);
         if (res.ok) {
           const data = await res.json();
           if (data.name) setAreaName(data.name);
@@ -68,7 +68,7 @@ export default function KioskPage() {
       }
 
       try {
-        const res = await fetch(`/api/areas/${areaId}/device-lock`, {
+        const res = await fetch(`/kios/api/areas/${areaId}/device-lock`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ deviceType: 'kiosk', deviceId })
@@ -91,7 +91,7 @@ export default function KioskPage() {
 
   const fetchLastNumber = async () => {
     try {
-      const res = await fetch(`/api/tickets/last?areaId=${areaId}`);
+      const res = await fetch(`/kios/api/tickets/last?areaId=${areaId}`);
       if (res.ok) {
         const data = await res.json();
         if (data.ticketNumber) {
@@ -110,7 +110,7 @@ export default function KioskPage() {
     setTicketData(null);
 
     try {
-      const res = await fetch('/api/tickets/issue', {
+      const res = await fetch('/kios/api/tickets/issue', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ areaId }),
@@ -173,7 +173,7 @@ export default function KioskPage() {
     
     setIsBatching(true);
     try {
-      const res = await fetch(`/api/areas/${areaId}/batch-issue`, {
+      const res = await fetch(`/kios/api/areas/${areaId}/batch-issue`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ quantity: batchQuantity, pinCode })

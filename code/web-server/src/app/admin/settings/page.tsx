@@ -22,7 +22,7 @@ export default function SettingsPage() {
   const [savingPrefixes, setSavingPrefixes] = useState(false);
 
   useEffect(() => {
-    fetch('/api/settings')
+    fetch('/kios/api/settings')
       .then(res => res.json())
       .then(data => {
         if (data.validPhonePrefixes) {
@@ -40,7 +40,7 @@ export default function SettingsPage() {
   const handleSavePrefixes = async () => {
     setSavingPrefixes(true);
     try {
-      const res = await fetch('/api/settings', {
+      const res = await fetch('/kios/api/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ validPhonePrefixes: JSON.stringify(validPrefixes) })
@@ -65,7 +65,7 @@ export default function SettingsPage() {
     formData.append('type', type);
 
     try {
-      const res = await fetch('/api/upload', {
+      const res = await fetch('/kios/api/upload', {
         method: 'POST',
         body: formData,
       });

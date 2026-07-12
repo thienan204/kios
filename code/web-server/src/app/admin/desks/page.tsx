@@ -15,7 +15,7 @@ export default function DesksPage() {
   const fetchDesks = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/desks');
+      const res = await fetch('/kios/api/desks');
       const data = await res.json();
       setDesks(data);
     } catch (error) {
@@ -27,7 +27,7 @@ export default function DesksPage() {
 
   const fetchAreas = async () => {
     try {
-      const res = await fetch('/api/areas');
+      const res = await fetch('/kios/api/areas');
       const data = await res.json();
       setAreas(data);
     } catch (error) {
@@ -59,7 +59,7 @@ export default function DesksPage() {
 
   const handleDelete = async (id: number) => {
     try {
-      const res = await fetch(`/api/desks/${id}`, { method: 'DELETE' });
+      const res = await fetch(`/kios/api/desks/${id}`, { method: 'DELETE' });
       if (res.ok) {
         message.success('Xóa thành công');
         fetchDesks();
@@ -74,7 +74,7 @@ export default function DesksPage() {
 
   const onFinish = async (values: any) => {
     try {
-      const url = editingId ? `/api/desks/${editingId}` : '/api/desks';
+      const url = editingId ? `/kios/api/desks/${editingId}` : '/kios/api/desks';
       const method = editingId ? 'PUT' : 'POST';
       const res = await fetch(url, {
         method,

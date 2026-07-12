@@ -41,7 +41,7 @@ export default function TicketsMonitoringPage() {
   const fetchTickets = async (dateRange: [dayjs.Dayjs | null, dayjs.Dayjs | null]) => {
     setLoading(true);
     try {
-      let url = '/api/tickets';
+      let url = '/kios/api/tickets';
       if (dateRange && dateRange[0] && dateRange[1]) {
         url += `?startDate=${dateRange[0].format('YYYY-MM-DD')}&endDate=${dateRange[1].format('YYYY-MM-DD')}`;
       } else {
@@ -85,7 +85,7 @@ export default function TicketsMonitoringPage() {
       const startDate = deleteDateRange[0].format('YYYY-MM-DD');
       const endDate = deleteDateRange[1].format('YYYY-MM-DD');
 
-      const res = await fetch(`/api/tickets?startDate=${startDate}&endDate=${endDate}`, {
+      const res = await fetch(`/kios/api/tickets?startDate=${startDate}&endDate=${endDate}`, {
         method: 'DELETE',
       });
       const data = await res.json();

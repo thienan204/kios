@@ -32,7 +32,7 @@ export default function AdminLayout({
     // In a real app, you would hit an API to clear the cookie
     // For now we can just clear it via JS if it's not httpOnly, but our token is httpOnly.
     // So we should make a quick logout API call.
-    await fetch('/api/auth/logout', { method: 'POST' });
+    await fetch('/kios/api/auth/logout', { method: 'POST' });
     router.push('/admin/login');
   };
 

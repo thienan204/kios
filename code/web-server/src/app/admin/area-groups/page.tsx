@@ -14,7 +14,7 @@ export default function AreaGroupsPage() {
   const fetchGroups = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/area-groups');
+      const res = await fetch('/kios/api/area-groups');
       const data = await res.json();
       setGroups(data);
     } catch (e) {
@@ -44,7 +44,7 @@ export default function AreaGroupsPage() {
 
   const handleDelete = async (id: number) => {
     try {
-      const res = await fetch(`/api/area-groups/${id}`, {
+      const res = await fetch(`/kios/api/area-groups/${id}`, {
         method: 'DELETE',
       });
       if (res.ok) {
@@ -61,7 +61,7 @@ export default function AreaGroupsPage() {
 
   const onFinish = async (values: any) => {
     try {
-      const url = editingId ? `/api/area-groups/${editingId}` : '/api/area-groups';
+      const url = editingId ? `/kios/api/area-groups/${editingId}` : '/kios/api/area-groups';
       const method = editingId ? 'PUT' : 'POST';
 
       const res = await fetch(url, {

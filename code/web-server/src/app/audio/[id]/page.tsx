@@ -77,7 +77,7 @@ export default function AudioPage({ params }: { params: Promise<{ id: string }> 
       }
 
       try {
-        const res = await fetch(`/api/areas/${areaId}/device-lock`, {
+        const res = await fetch(`/kios/api/areas/${areaId}/device-lock`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ deviceType: 'audio', deviceId })
@@ -98,7 +98,7 @@ export default function AudioPage({ params }: { params: Promise<{ id: string }> 
   useEffect(() => {
     if (!areaId || isLockedOut || !audioEnabled) return;
 
-    const eventSource = new EventSource(`/api/events?areaId=${areaId}&type=audio`);
+    const eventSource = new EventSource(`/kios/api/events?areaId=${areaId}&type=audio`);
     eventSource.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
@@ -175,7 +175,7 @@ export default function AudioPage({ params }: { params: Promise<{ id: string }> 
     } 
     else if (currentEngine === 'google') {
       try {
-        const url = `/api/tts/google?text=${encodeURIComponent(textToSpeak)}`;
+        const url = `/kios/api/tts/google?text=${encodeURIComponent(textToSpeak)}`;
         const audio = audioPlayerRef.current;
         if (audio) {
           audio.src = url;

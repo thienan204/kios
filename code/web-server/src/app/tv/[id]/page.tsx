@@ -53,7 +53,7 @@ export default function TVPage({ params }: { params: Promise<{ id: string }> }) 
 
   const fetchData = async (preserveCurrentCall = false) => {
     try {
-      const res = await fetch(`/api/tickets/history?areaId=${areaId}`);
+      const res = await fetch(`/kios/api/tickets/history?areaId=${areaId}`);
       const data = await res.json();
       if (data.success) {
         if (!preserveCurrentCall) setCurrentCall(data.currentCall);
@@ -73,7 +73,7 @@ export default function TVPage({ params }: { params: Promise<{ id: string }> }) 
     // Lấy dữ liệu ngay khi load
     fetchData();
 
-    const eventSource = new EventSource(`/api/events?areaId=${areaId}${!tvMutedConfig ? '&type=audio' : ''}`);
+    const eventSource = new EventSource(`/kios/api/events?areaId=${areaId}${!tvMutedConfig ? '&type=audio' : ''}`);
     eventSource.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
@@ -151,7 +151,7 @@ export default function TVPage({ params }: { params: Promise<{ id: string }> }) 
     } 
     else if (currentEngine === 'google') {
       try {
-        const url = `/api/tts/google?text=${encodeURIComponent(textToSpeak)}`;
+        const url = `/kios/api/tts/google?text=${encodeURIComponent(textToSpeak)}`;
         const audio = audioPlayerRef.current;
         if (audio) {
           audio.src = url;
