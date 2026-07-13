@@ -1,10 +1,10 @@
 import { PrismaClient } from '@prisma/client';
-import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
 async function main() {
-  const adminPassword = await bcrypt.hash('admin123', 10);
+  // Hardcoded bcrypt hash for 'admin123' to avoid missing dependency in standalone mode
+  const adminPassword = '$2b$10$OLhyOjAkQEisYfC2Lo4QtOfEdCCT/7EKH82rYT1QRCPpAcQk4Oake';
   
   const admin = await prisma.user.upsert({
     where: { username: 'admin' },
