@@ -15,7 +15,7 @@ echo "[3/3] Cập nhật cấu trúc Database (Prisma push)..."
 docker exec kiosklayso-web npx prisma@6.3.0 db push --skip-generate
 
 echo "[4/4] Nạp dữ liệu mặc định (Seed)..."
-docker exec kiosklayso-web npx prisma db seed
+docker exec kiosklayso-web npx -y tsx prisma/seed.ts
 
 echo "======================================"
 echo "       CẬP NHẬT THÀNH CÔNG!           "
