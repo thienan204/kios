@@ -353,8 +353,6 @@ export default function KioskPage() {
         </div>
       </Modal>
 
-      </div>
-
       {/* KHU VỰC CHUẨN BỊ IN (Chỉ hiện khi in) */}
       {ticketData && (
         <div id="print-area" ref={printRef} className="hidden print:block w-full max-w-[80mm] mx-auto text-center font-sans text-black bg-white px-1 py-2">
