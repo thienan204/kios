@@ -1,6 +1,8 @@
 import { NextRequest } from 'next/server';
 import { eventEmitter, activeAudioClients } from '@/lib/eventEmitter';
 
+export const dynamic = 'force-dynamic';
+
 // Đây là API Server-Sent Events (SSE) để kết nối liên tục 1 chiều từ Server -> Client (Tivi / Audio)
 export async function GET(req: NextRequest) {
   const searchParams = req.nextUrl.searchParams;
@@ -53,6 +55,7 @@ export async function GET(req: NextRequest) {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache, no-transform',
       'Connection': 'keep-alive',
+      'X-Accel-Buffering': 'no',
     },
   });
 }
