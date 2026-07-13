@@ -14,7 +14,9 @@ declare global {
 }
 
 let currentDeskId: string | null = localStorage.getItem('kiosk_desk_id');
-let serverUrl: string = import.meta.env.VITE_SERVER_URL || localStorage.getItem('kiosk_server_url') || 'http://localhost:3000';
+const LAN_URL: string = import.meta.env.VITE_LAN_URL || 'http://192.168.3.98:3002/kios';
+const WAN_URL: string = import.meta.env.VITE_WAN_URL || 'https://htqlbenhvien.bvdklangson.com.vn:201/kios';
+let serverUrl: string = localStorage.getItem('kiosk_server_url') || LAN_URL;
 
 const appDiv = document.querySelector<HTMLDivElement>('#app')!;
 
@@ -42,9 +44,9 @@ function renderConfig() {
     <div class="p-6 h-full flex flex-col justify-center bg-gray-100">
       <h2 class="text-xl font-bold text-center text-blue-800 mb-6">CẤU HÌNH BÀN TIẾP ĐÓN</h2>
       
-      <label id="secretUnlockLabel" class="block text-sm font-semibold mb-1 select-none cursor-default">URL Máy chủ (Kèm port):</label>
+      <label id="secretUnlockLabel" class="block text-sm font-semibold mb-1 select-none cursor-default">Mạng kết nối (URL Máy chủ):</label>
       <div class="flex gap-2 mb-4">
-        <input id="serverUrlInput" type="text" value="${serverUrl}" class="flex-1 p-2 border rounded bg-gray-200 text-gray-500 cursor-not-allowed focus:outline-none" readonly title="Cấu hình hệ thống mặc định (Không thể sửa)" />
+        <input id="serverUrlInput" type="text" value="${serverUrl}" placeholder="Nhập địa chỉ..." class="flex-1 p-2 border rounded bg-white text-gray-800 focus:outline-blue-500" />
         <button id="loadDesksBtn" class="bg-blue-100 hover:bg-blue-200 text-blue-700 text-sm font-semibold px-3 rounded border border-blue-300 transition-colors cursor-pointer">Tải lại</button>
       </div>
       
@@ -144,8 +146,14 @@ function renderConfig() {
   }
 
   loadDesksBtn?.addEventListener('click', async () => {
-    configMsg.textContent = 'Đang tải danh sách bàn...';
+    if (!loadDesksBtn || !serverUrlInput) return;
+    
+    configMsg.textContent = 'Đang kết nối...';
     configMsg.className = 'text-center text-sm text-blue-500 mt-2 h-4';
+    
+    // Khóa tạm nút trong lúc tải
+    (loadDesksBtn as HTMLButtonElement).disabled = true;
+    (serverUrlInput as HTMLInputElement).disabled = true;
     
     const url = serverUrlInput.value.replace(/\/$/, "");
     const desks = await fetchDesksList(url);
@@ -174,15 +182,25 @@ function renderConfig() {
       }
 
       configMsg.textContent = 'Kết nối thành công!';
-      configMsg.className = 'text-center text-sm text-green-600 mt-2 h-4';
+      configMsg.className = 'text-center text-sm font-bold text-green-600 mt-2 h-4';
+      
+      // Giữ trạng thái mờ (disabled) khi thành công
+      serverUrlInput.classList.add('bg-gray-200', 'text-gray-500', 'cursor-not-allowed');
+      serverUrlInput.classList.remove('bg-white', 'text-gray-800');
+      loadDesksBtn.classList.add('opacity-50', 'cursor-not-allowed');
+      
     } else {
       configMsg.textContent = 'Lỗi kết nối máy chủ hoặc API';
       configMsg.className = 'text-center text-sm text-red-500 mt-2 h-4';
-      areaIdSelect.innerHTML = '<option value="">-- Vui lòng ấn Kết nối máy chủ --</option>';
+      areaIdSelect.innerHTML = '<option value="">-- Vui lòng ấn Tải lại --</option>';
       areaIdSelect.disabled = true;
-      deskIdSelect.innerHTML = '<option value="">-- Vui lòng ấn Kết nối máy chủ --</option>';
+      deskIdSelect.innerHTML = '<option value="">-- Vui lòng ấn Tải lại --</option>';
       deskIdSelect.disabled = true;
       saveConfigBtn.disabled = true;
+      
+      // Mở khóa lại để nhập lại nếu lỗi
+      (loadDesksBtn as HTMLButtonElement).disabled = false;
+      (serverUrlInput as HTMLInputElement).disabled = false;
     }
   });
 
@@ -212,10 +230,16 @@ function renderConfig() {
   document.getElementById('secretUnlockLabel')?.addEventListener('click', () => {
     clickCount++;
     if (clickCount >= 3) {
-      serverUrlInput.removeAttribute('readonly');
+      serverUrlInput.disabled = false;
       serverUrlInput.classList.remove('bg-gray-200', 'text-gray-500', 'cursor-not-allowed');
-      serverUrlInput.classList.add('bg-white', 'text-black', 'focus:ring-2', 'focus:ring-blue-500');
-      configMsg.textContent = '🔓 Đã mở khóa cấu hình URL Máy chủ!';
+      serverUrlInput.classList.add('bg-white', 'text-gray-800');
+      
+      if (loadDesksBtn) {
+        (loadDesksBtn as HTMLButtonElement).disabled = false;
+        loadDesksBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+      }
+      
+      configMsg.textContent = '🔓 Đã mở khóa cấu hình mạng!';
       configMsg.className = 'text-center text-sm font-bold text-orange-600 mt-2 h-4';
       clickCount = 0;
     }
@@ -643,12 +667,101 @@ async function callNextTicket() {
   }
 }
 
-// Khởi tạo
-if (!currentDeskId) {
-  renderConfig();
-} else {
-  renderApp();
+async function bootloader() {
+  if (!serverUrl || serverUrl === '') {
+    showWizardWithMac();
+    return;
+  }
+
+  // Nếu đã có URL, tiến hành kiểm tra MAC
+  appDiv.innerHTML = `<div class="p-6 h-full flex flex-col items-center justify-center bg-gray-100">
+    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+    <h2 class="text-xl font-bold text-blue-800">Đang khởi tạo hệ thống...</h2>
+    <p class="text-gray-500 mt-2">Vui lòng chờ giây lát</p>
+  </div>`;
+
+  try {
+    let mac = 'UNKNOWN';
+    if (window.electronAPI && (window.electronAPI as any).getMac) {
+      mac = await (window.electronAPI as any).getMac();
+    }
+
+    const res = await fetch(`${serverUrl}/api/devices/check-mac?mac=${mac}`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.type === 'SELF_REG_KIOSK') {
+        if (window.electronAPI && (window.electronAPI as any).switchMode) {
+          (window.electronAPI as any).switchMode('KIOSK', `${serverUrl}/tu-dang-ky`);
+        }
+        return; // Dừng tại đây, cửa sổ sẽ bung Fullscreen và tải trang Web
+      }
+    }
+  } catch (err) {
+    console.warn('Lỗi kiểm tra MAC, sẽ tiếp tục load giao diện Bàn Tiếp Đón:', err);
+  }
+
+  // Fallback hoặc là DESK
+  if (window.electronAPI && (window.electronAPI as any).switchMode) {
+    (window.electronAPI as any).switchMode('DESK');
+  }
+
+  if (!currentDeskId) {
+    renderConfig();
+  } else {
+    renderApp();
+  }
 }
+
+function renderSetupWizard(macAddress: string = 'Đang tải...') {
+  appDiv.innerHTML = `
+    <div class="p-6 h-full flex flex-col justify-center bg-blue-50">
+      <div class="bg-white p-6 rounded-2xl shadow-xl">
+        <h2 class="text-2xl font-bold text-center text-blue-800 mb-2">THIẾT LẬP HỆ THỐNG</h2>
+        <p class="text-center text-gray-500 mb-4 text-sm">Vui lòng cấu hình URL Máy chủ (Server) để phần mềm nhận diện thiết bị.</p>
+        
+        <div class="bg-blue-50 border border-blue-200 p-3 rounded-lg mb-6 text-center">
+          <p class="text-xs text-blue-600 mb-1 font-semibold uppercase tracking-wider">Địa chỉ MAC của máy này</p>
+          <p class="text-lg font-mono font-bold text-blue-900 select-all">${macAddress}</p>
+          <p class="text-[10px] text-gray-500 mt-1">Copy mã này dán vào Admin Web để đăng ký Kiosk</p>
+        </div>
+
+        <label class="block text-sm font-semibold mb-2">Địa chỉ Máy chủ (Web Server URL):</label>
+        <input id="setupServerUrl" type="text" value="${serverUrl || LAN_URL}" class="w-full p-3 border-2 border-blue-200 rounded-xl mb-6 focus:outline-blue-500 focus:border-blue-500" />
+        
+        <button id="setupSaveBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-md transition-all">KẾT NỐI & KHỞI ĐỘNG</button>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('setupSaveBtn')?.addEventListener('click', () => {
+    const val = (document.getElementById('setupServerUrl') as HTMLInputElement).value.trim();
+    if (val) {
+      localStorage.setItem('kiosk_server_url', val.replace(/\/$/, ""));
+      serverUrl = val.replace(/\/$/, "");
+      bootloader();
+    }
+  });
+}
+
+// Hàm khởi tạo lấy MAC hiển thị lên Wizard nếu cần
+async function showWizardWithMac() {
+  let mac = 'UNKNOWN';
+  if (window.electronAPI && (window.electronAPI as any).getMac) {
+    mac = await (window.electronAPI as any).getMac();
+  }
+  renderSetupWizard(mac);
+}
+
+// Lắng nghe phím tắt Ctrl+Shift+S để mở Setup Wizard bất cứ lúc nào
+document.addEventListener('keydown', (e) => {
+  if (e.ctrlKey && e.shiftKey && (e.key === 's' || e.key === 'S')) {
+    e.preventDefault();
+    showWizardWithMac();
+  }
+});
+
+// Khởi tạo
+bootloader();
 
 // Lắng nghe sự kiện từ phím tắt toàn cục (Electron IPC)
 if (window.electronAPI) {

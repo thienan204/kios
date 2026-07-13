@@ -9,6 +9,9 @@ import {
   DashboardOutlined,
   ReadOutlined,
   SettingOutlined,
+  UsbOutlined,
+  VideoCameraOutlined,
+  BookOutlined,
 } from '@ant-design/icons';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
@@ -61,6 +64,38 @@ export default function AdminLayout({
       key: '/admin/desks',
       icon: <DesktopOutlined />,
       label: <Link href="/admin/desks">Quản lý Bàn tiếp đón</Link>,
+    },
+    {
+      key: 'tu-dang-ky-group',
+      icon: <DesktopOutlined />,
+      label: 'Kiosk Tự Đăng Ký',
+      children: [
+        {
+          key: '/admin/tu-dang-ky/thiet-bi',
+          icon: <DesktopOutlined />,
+          label: <Link href="/admin/tu-dang-ky/thiet-bi">Quản lý Thiết bị</Link>,
+        },
+        {
+          key: '/admin/tu-dang-ky/api-mapping',
+          icon: <SettingOutlined />,
+          label: <Link href="/admin/tu-dang-ky/api-mapping">Cấu hình API HIS</Link>,
+        },
+        {
+          key: '/admin/tu-dang-ky/test-phan-cung',
+          icon: <UsbOutlined />,
+          label: <Link href="/admin/tu-dang-ky/test-phan-cung">Test Đầu Đọc CCCD</Link>,
+        },
+        {
+          key: '/admin/tu-dang-ky/test-camera',
+          icon: <VideoCameraOutlined />,
+          label: <Link href="/admin/tu-dang-ky/test-camera">Test Camera</Link>,
+        },
+        {
+          key: '/admin/tu-dang-ky/huong-dan',
+          icon: <BookOutlined />,
+          label: <Link href="/admin/tu-dang-ky/huong-dan">Hướng dẫn sử dụng</Link>,
+        },
+      ],
     },
     {
       key: '/admin/settings',

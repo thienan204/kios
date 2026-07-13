@@ -21,5 +21,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.removeAllListeners('trigger-recall');
     ipcRenderer.removeAllListeners('trigger-skip');
     ipcRenderer.removeAllListeners('trigger-pause');
+  },
+  // Kiosk & Zero-touch Provisioning APIs
+  getMac: () => ipcRenderer.invoke('get-mac'),
+  switchMode: (mode: 'DESK' | 'KIOSK', url?: string) => ipcRenderer.send('switch-mode', mode, url),
+  onCardData: (callback: (data: any) => void) => {
+    ipcRenderer.on('card-data-received', (_, data) => callback(data));
   }
 });

@@ -92,3 +92,34 @@ model SystemSetting {
   key   String @id
   value String
 }
+
+// ==========================================
+// MODULE: TỰ ĐĂNG KÝ KHÁM
+// ==========================================
+
+model SelfRegDevice {
+  id            Int      @id @default(autoincrement())
+  name          String   
+  ipAddress     String?  
+  macAddress    String?  @unique 
+  location      String?  
+  readerModel   String?  // Hãng/Model Đầu đọc CCCD (VD: Newland, ACR122U)
+  cameraModel   String?  // Hãng/Model Camera (VD: Logitech HD)
+  status        String   @default("OFFLINE") 
+  allowBHYT     Boolean  @default(true)      
+  allowService  Boolean  @default(true)      
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model SelfRegHISConfig {
+  id           Int      @id @default(autoincrement())
+  endpointUrl  String   
+  httpMethod   String   @default("POST")
+  headers      String?  
+  fieldMapping String?  
+  formLayout   String?  @db.Text
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+

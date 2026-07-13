@@ -28,5 +28,8 @@
     "directories": {
       "output": "release"
     }
+  },
+  "dependencies": {
+    "getmac": "^6.6.0"
   }
 }
