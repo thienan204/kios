@@ -98,6 +98,7 @@ export default function FormBuilderTab({ initialLayout, mappedFields, onSave }: 
         </div>
 
         <div className="bg-gray-100 p-8 rounded-2xl border-4 border-dashed border-gray-300 min-h-[500px]">
+          {/* @ts-ignore - Bỏ qua lỗi type mismatch của react-grid-layout đối với thuộc tính cols */}
           <GridLayout
             className="layout"
             layout={layout}
