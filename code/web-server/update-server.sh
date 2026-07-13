@@ -14,6 +14,9 @@ echo "[3/3] Cập nhật cấu trúc Database (Prisma push)..."
 # Chạy db push không cần interactive (-it) để script không bị lỗi môi trường
 docker exec kiosklayso-web npx prisma@6.3.0 db push --skip-generate
 
+echo "[4/4] Nạp dữ liệu mặc định (Seed)..."
+docker exec kiosklayso-web npx prisma db seed
+
 echo "======================================"
 echo "       CẬP NHẬT THÀNH CÔNG!           "
 echo "======================================"
