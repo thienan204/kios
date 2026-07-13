@@ -16,6 +16,7 @@ export default function MobileKioskPage() {
   const [imageVersion, setImageVersion] = useState('');
   
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [prefixWarning, setPrefixWarning] = useState(false);
   
   const [isListening, setIsListening] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(false);
@@ -69,10 +70,13 @@ export default function MobileKioskPage() {
               const prefix = combined.substring(0, 3);
               const isValid = validPrefixesRef.current.length === 0 || validPrefixesRef.current.includes(prefix);
               if (!isValid) {
-                message.destroy();
-                message.warning('Đầu số mạng không hợp lệ (vd: 098, 036...)');
+                setPrefixWarning(true);
                 combined = combined.substring(0, 3);
+              } else {
+                setPrefixWarning(false);
               }
+            } else {
+              setPrefixWarning(false);
             }
             setPhoneNumber(combined.slice(0, 10));
           }
@@ -262,6 +266,13 @@ export default function MobileKioskPage() {
           
           <div className="w-full mb-6">
             <label className="block text-sm font-bold text-gray-700 mb-2 uppercase">Số điện thoại của bạn:</label>
+            
+            {prefixWarning && (
+              <div className="bg-red-50 text-red-600 text-sm font-semibold px-3 py-2 rounded-lg mb-3 border border-red-200 flex items-center animate-pulse">
+                <span className="mr-2">⚠️</span> Đầu số mạng không hợp lệ (vd: 098, 036...)
+              </div>
+            )}
+
             <Input 
               type="tel"
               size="large"
@@ -274,12 +285,12 @@ export default function MobileKioskPage() {
                   const prefix = val.substring(0, 3);
                   const isValid = validPrefixesRef.current.length === 0 || validPrefixesRef.current.includes(prefix);
                   if (!isValid) {
-                    message.destroy();
-                    message.warning('Đầu số mạng không hợp lệ (vd: 098, 036...)');
+                    setPrefixWarning(true);
                     setPhoneNumber(val.substring(0, 3));
                     return;
                   }
                 }
+                setPrefixWarning(false);
                 setPhoneNumber(val);
               }}
               autoComplete="off"
