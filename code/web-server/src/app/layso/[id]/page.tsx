@@ -226,7 +226,7 @@ export default function KioskPage() {
   return (
     <>
       {/* KHU VỰC HIỂN THỊ TRÊN MÀN HÌNH (Sẽ ẩn khi in) */}
-      <div className="h-screen w-full flex flex-col items-center justify-center bg-blue-50 overflow-hidden print:hidden p-8">
+      <div className="min-h-screen relative w-full flex flex-col items-center justify-center bg-blue-50 print:hidden p-4 md:p-8">
         
         {/* KHU VỰC LOGO & BANNER */}
         <div className="w-full max-w-7xl mb-10 flex flex-col md:flex-row items-center justify-between gap-6 px-4">
