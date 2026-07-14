@@ -89,13 +89,19 @@ function startAudioService(config) {
   // Tự động click nút kích hoạt âm thanh khi trang load xong
   audioWindow.webContents.on('did-finish-load', () => {
     audioWindow.webContents.executeJavaScript(`
-      const buttons = document.querySelectorAll('button');
-      for (let btn of buttons) {
-        if (btn.innerText.includes('KÍCH HOẠT ÂM THANH')) {
-          btn.click();
-          break;
+      const checkAndClick = setInterval(() => {
+        const buttons = document.querySelectorAll('button');
+        for (let btn of buttons) {
+          if (btn.innerText && btn.innerText.includes('KÍCH HOẠT ÂM THANH')) {
+            btn.click();
+            clearInterval(checkAndClick);
+            console.log('Đã tự động click kích hoạt âm thanh!');
+            break;
+          }
         }
-      }
+      }, 500);
+      // Dừng tìm kiếm sau 15 giây để tránh rò rỉ bộ nhớ
+      setTimeout(() => clearInterval(checkAndClick), 15000);
     `).catch(err => console.log('Không thể click tự động:', err));
   });
 }
