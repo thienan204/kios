@@ -151,25 +151,36 @@ ipcMain.on('save-config', (event, config) => {
   }
 });
 
-// Ngăn không cho app tắt hoàn toàn khi đóng hết cửa sổ
-app.on('window-all-closed', (e) => {
-  e.preventDefault();
-});
+const gotTheLock = app.requestSingleInstanceLock();
 
-app.whenReady().then(() => {
-  // Tạo 1 ảnh icon 1x1 trong suốt tạm thời
-  const iconPath = path.join(__dirname, 'icon.png');
-  if (!fs.existsSync(iconPath)) {
-    const emptyPng = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=', 'base64');
-    fs.writeFileSync(iconPath, emptyPng);
-  }
-
-  createTray();
-
-  const config = loadConfig();
-  if (!config.serverUrl || !config.areaId) {
+if (!gotTheLock) {
+  app.quit();
+} else {
+  app.on('second-instance', (event, commandLine, workingDirectory) => {
+    // Khi người dùng bấm mở app lần thứ 2, thay vì chạy ngầm tiếp, ta hiện bảng cấu hình lên cho họ
     createConfigWindow();
-  } else {
-    startAudioService(config);
-  }
-});
+  });
+
+  // Ngăn không cho app tắt hoàn toàn khi đóng hết cửa sổ
+  app.on('window-all-closed', (e) => {
+    e.preventDefault();
+  });
+
+  app.whenReady().then(() => {
+    // Tạo 1 ảnh icon 1x1 trong suốt tạm thời
+    const iconPath = path.join(__dirname, 'icon.png');
+    if (!fs.existsSync(iconPath)) {
+      const emptyPng = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=', 'base64');
+      fs.writeFileSync(iconPath, emptyPng);
+    }
+
+    createTray();
+
+    const config = loadConfig();
+    if (!config.serverUrl || !config.areaId) {
+      createConfigWindow();
+    } else {
+      startAudioService(config);
+    }
+  });
+}
