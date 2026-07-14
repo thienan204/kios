@@ -15,7 +15,6 @@ declare global {
 
 let currentDeskId: string | null = localStorage.getItem('kiosk_desk_id');
 const LAN_URL: string = import.meta.env.VITE_LAN_URL || 'http://192.168.3.98:3002/kios';
-const WAN_URL: string = import.meta.env.VITE_WAN_URL || 'https://htqlbenhvien.bvdklangson.com.vn:201/kios';
 let serverUrl: string = localStorage.getItem('kiosk_server_url') || LAN_URL;
 
 const appDiv = document.querySelector<HTMLDivElement>('#app')!;
@@ -282,7 +281,13 @@ function renderApp() {
 
   appDiv.innerHTML = `
     <div class="h-full flex flex-col bg-slate-50 border-4 border-slate-300 rounded-xl overflow-hidden shadow-2xl relative">
-      <div class="bg-blue-800 text-white p-3 flex justify-between items-center shadow-md z-10 relative">
+      
+      <!-- Nút Cài đặt nhỏ xíu góc phải, mờ mờ, hover mới rõ -->
+      <button id="showTopBarBtn" class="absolute top-2 right-2 text-gray-300 hover:text-gray-500 transition-colors z-20 p-1" title="Mở cài đặt / Gọi số phụ">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492zM5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0z"/><path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.42 1.6-1.185 1.184l-.291-.159a1.873 1.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.377l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a1.873 1.873 0 0 0 2.692-1.115l.094-.319z"/></svg>
+      </button>
+
+      <div id="topBar" class="bg-blue-800 text-white p-3 flex justify-between items-center shadow-md z-10 relative hidden">
         <span class="font-bold text-sm truncate pr-2 flex-1 text-left" title="${localStorage.getItem('kiosk_desk_name') || `BÀN SỐ ${currentDeskId}`}">
           ${localStorage.getItem('kiosk_desk_name') || `BÀN SỐ ${currentDeskId}`}
         </span>
@@ -290,6 +295,7 @@ function renderApp() {
           <button id="pauseIssueBtn" class="text-[10px] bg-slate-600 border border-slate-500 text-white px-2 py-1 rounded hover:bg-slate-500 transition-colors hidden" title="Tạm dừng cấp số cho toàn khu vực">Đang tải...</button>
           <button id="toggleSpecificBtn" class="text-xs bg-blue-600 border border-blue-500 text-white px-2 py-1 rounded hover:bg-blue-500 transition-colors" title="Gọi số chỉ định thủ công">+ Số</button>
           <button id="configBtn" class="text-xs bg-white text-blue-800 px-2 py-1 rounded hover:bg-gray-200 transition-colors">Đổi</button>
+          <button id="hideTopBarBtn" class="text-lg text-white opacity-70 hover:opacity-100 leading-none pb-1 ml-1 font-bold">×</button>
         </div>
       </div>
       
@@ -311,21 +317,19 @@ function renderApp() {
           <span class="block text-[10px] font-normal opacity-75 mt-0.5 relative z-10">(${sc.callNext})</span>
         </button>
         
-        <div class="flex gap-2 w-full mt-3">
-          <button id="recallBtn" class="flex-1 bg-gradient-to-b from-orange-400 to-orange-500 hover:from-orange-300 hover:to-orange-400 active:from-orange-600 active:to-orange-700 text-white font-bold py-2 rounded-lg shadow-[0_4px_0_rgb(194,65,12)] active:shadow-[0_0px_0_rgb(194,65,12)] active:translate-y-1 transition-all text-xs">
-            GỌI LẠI SỐ
-            <span class="block text-[9px] font-normal opacity-80">(${sc.recall})</span>
-          </button>
-          
-          <button id="skipBtn" class="flex-1 bg-gradient-to-b from-red-500 to-red-600 hover:from-red-400 hover:to-red-500 active:from-red-700 active:to-red-800 text-white font-bold py-2 rounded-lg shadow-[0_4px_0_rgb(153,27,27)] active:shadow-[0_0px_0_rgb(153,27,27)] active:translate-y-1 transition-all text-xs">
-            BỎ QUA LUÔN
-            <span class="block text-[9px] font-normal opacity-80">(${sc.skip})</span>
-          </button>
-        </div>
+        <button id="recallBtn" class="w-full mt-4 bg-gradient-to-b from-orange-400 to-orange-500 hover:from-orange-300 hover:to-orange-400 active:from-orange-600 active:to-orange-700 text-white font-bold py-3.5 rounded-xl shadow-[0_4px_0_rgb(194,65,12)] active:shadow-[0_0px_0_rgb(194,65,12)] active:translate-y-1 transition-all text-sm flex justify-center items-center gap-2">
+          GỌI LẠI SỐ
+          <span class="text-[10px] font-normal opacity-80">(${sc.recall})</span>
+        </button>
+        
+        <button id="skipBtn" class="w-full mt-3 bg-gradient-to-b from-red-500 to-red-600 hover:from-red-400 hover:to-red-500 active:from-red-700 active:to-red-800 text-white font-bold py-3.5 rounded-xl shadow-[0_4px_0_rgb(153,27,27)] active:shadow-[0_0px_0_rgb(153,27,27)] active:translate-y-1 transition-all text-sm flex justify-center items-center gap-2">
+          BỎ QUA LUÔN
+          <span class="text-[10px] font-normal opacity-80">(${sc.skip})</span>
+        </button>
 
 
-        <button id="pauseBtn" class="w-full mt-3 bg-gray-200 hover:bg-gray-300 active:bg-gray-400 text-gray-700 font-bold py-2 rounded-lg border border-gray-400 shadow-sm active:translate-y-1 transition-all text-xs">
-          KẾT THÚC / DỪNG TIẾP ĐÓN (${sc.pause})
+        <button id="pauseBtn" class="w-full mt-3 bg-gray-200 hover:bg-gray-300 active:bg-gray-400 text-gray-700 font-bold py-3.5 rounded-xl border border-gray-400 shadow-sm active:translate-y-1 transition-all text-sm flex justify-center items-center gap-2">
+          KẾT THÚC / DỪNG TIẾP ĐÓN <span class="text-[10px] font-normal text-gray-500">(${sc.pause})</span>
         </button>
         
         <p id="statusMsg" class="mt-2 text-xs font-semibold text-center h-4 text-red-500"></p>
@@ -335,6 +339,25 @@ function renderApp() {
 
   document.getElementById('configBtn')?.addEventListener('click', () => {
     renderConfig();
+  });
+
+  const topBar = document.getElementById('topBar');
+  const showTopBarBtn = document.getElementById('showTopBarBtn');
+  const hideTopBarBtn = document.getElementById('hideTopBarBtn');
+
+  showTopBarBtn?.addEventListener('click', () => {
+    topBar?.classList.remove('hidden');
+    showTopBarBtn.classList.add('hidden');
+  });
+
+  hideTopBarBtn?.addEventListener('click', () => {
+    topBar?.classList.add('hidden');
+    showTopBarBtn?.classList.remove('hidden');
+    // Hide specific call container if it's open
+    const specificCallContainer = document.getElementById('specificCallContainer');
+    if (specificCallContainer) {
+      specificCallContainer.classList.add('hidden');
+    }
   });
 
   const callBtn = document.getElementById('callBtn') as HTMLButtonElement;

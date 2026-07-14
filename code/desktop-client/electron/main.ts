@@ -7,7 +7,7 @@ let mainWindow: BrowserWindow | null = null;
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 320,
-    height: 580,
+    height: 480,
     alwaysOnTop: true, // Always on top as requested
     autoHideMenuBar: true, // Ẩn thanh File/Edit/View
     webPreferences: {
@@ -21,7 +21,7 @@ function createWindow() {
   const { screen } = require('electron');
   const primaryDisplay = screen.getPrimaryDisplay();
   const { width, height } = primaryDisplay.workAreaSize;
-  mainWindow.setPosition(width - 320 - 20, height - 580 - 20);
+  mainWindow.setPosition(width - 320 - 20, height - 480 - 20);
 
   // Load UI
   if (process.env.VITE_DEV_SERVER_URL) {
@@ -141,8 +141,8 @@ ipcMain.on('switch-mode', (event, mode, url) => {
     mainWindow.setMenuBarVisibility(false);
     mainWindow.loadURL(url);
   } else if (mode === 'DESK') {
-    // Giữ nguyên cửa sổ hiện tại (320x580)
+    // Giữ nguyên cửa sổ hiện tại (320x480)
     mainWindow.setFullScreen(false);
-    mainWindow.setSize(320, 580);
+    mainWindow.setSize(320, 480);
   }
 });
