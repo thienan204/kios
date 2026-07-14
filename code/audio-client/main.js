@@ -71,7 +71,11 @@ function startAudioService(config) {
     }
   });
 
-  const url = `${config.serverUrl}/kios/audio/${config.areaId}`;
+  let sUrl = config.serverUrl.replace(/\/$/, "");
+  if (sUrl.endsWith('/kios')) {
+    sUrl = sUrl.substring(0, sUrl.length - 5);
+  }
+  const url = `${sUrl}/kios/audio/${config.areaId}`;
   audioWindow.loadURL(url);
 
   // Xử lý khi trang web bị lỗi (load lại)
