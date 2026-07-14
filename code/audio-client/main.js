@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Tray, Menu, ipcMain, shell } = require('electron');
+const { app, BrowserWindow, Tray, Menu, ipcMain, shell, nativeImage } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
@@ -86,8 +86,10 @@ function startAudioService(config) {
 function createTray() {
   if (tray) return;
 
-  // Sử dụng icon mặc định của electron nếu chưa có icon riêng
-  tray = new Tray(path.join(__dirname, 'icon.png'));
+  // Tạo một icon rỗng (tàng hình) từ base64 mà không cần ghi ra file vật lý
+  const emptyPng = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=', 'base64');
+  const icon = nativeImage.createFromBuffer(emptyPng);
+  tray = new Tray(icon);
   
   const contextMenu = Menu.buildFromTemplate([
     { label: 'Trạm Phát Âm Thanh Kiosk', enabled: false },
@@ -167,13 +169,6 @@ if (!gotTheLock) {
   });
 
   app.whenReady().then(() => {
-    // Tạo 1 ảnh icon 1x1 trong suốt tạm thời
-    const iconPath = path.join(__dirname, 'icon.png');
-    if (!fs.existsSync(iconPath)) {
-      const emptyPng = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=', 'base64');
-      fs.writeFileSync(iconPath, emptyPng);
-    }
-
     createTray();
 
     const config = loadConfig();
