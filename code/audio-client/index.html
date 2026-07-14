@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cấu hình Trạm Phát Âm Thanh</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 flex items-center justify-center min-h-screen p-4 font-sans select-none">
+    <div class="bg-white p-8 rounded-2xl shadow-lg max-w-md w-full border border-gray-100">
+        <div class="flex justify-center mb-4">
+            <div class="bg-blue-100 p-3 rounded-full text-blue-600">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M8 10V14a2 2 0 002 2h2l4 4V4l-4 4h-2a2 2 0 00-2 2z" />
+                </svg>
+            </div>
+        </div>
+        <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">Trạm Phát Âm Thanh</h2>
+        
+        <form id="configForm" class="space-y-5">
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Đường dẫn máy chủ (Kèm Port)</label>
+                <input type="url" id="serverUrl" placeholder="https://htqlbenhvien.bvdklangson.com.vn:201" 
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" required>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1">ID Khu vực gọi số</label>
+                <input type="number" id="areaId" placeholder="1" min="1"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" required>
+            </div>
+
+            <button type="submit" 
+                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors mt-2 shadow-md">
+                Lưu và Phát Ngầm
+            </button>
+        </form>
+        <p class="text-xs text-center text-gray-500 mt-4">Phần mềm sẽ thu nhỏ xuống khay hệ thống sau khi lưu.</p>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const currentConfig = await window.api.getConfig();
+            if (currentConfig.serverUrl) {
+                document.getElementById('serverUrl').value = currentConfig.serverUrl;
+            }
+            if (currentConfig.areaId) {
+                document.getElementById('areaId').value = currentConfig.areaId;
+            }
+
+            document.getElementById('configForm').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const serverUrl = document.getElementById('serverUrl').value.replace(/\/$/, "");
+                const areaId = document.getElementById('areaId').value;
+                
+                window.api.saveConfig({ serverUrl, areaId });
+            });
+        });
+    </script>
+</body>
+</html>

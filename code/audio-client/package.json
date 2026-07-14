@@ -1,0 +1,28 @@
+{
+  "name": "audio-kiosk-client",
+  "version": "1.0.0",
+  "description": "Trạm Âm Thanh Kiosk Chạy Ngầm",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder build --win"
+  },
+  "author": "BVDK Lang Son",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.bvdk.audiokiosk",
+    "productName": "Trạm Phát Âm Thanh",
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": true,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}
