@@ -85,6 +85,19 @@ function startAudioService(config) {
       if (audioWindow) audioWindow.loadURL(url);
     }, 5000);
   });
+
+  // Tự động click nút kích hoạt âm thanh khi trang load xong
+  audioWindow.webContents.on('did-finish-load', () => {
+    audioWindow.webContents.executeJavaScript(`
+      const buttons = document.querySelectorAll('button');
+      for (let btn of buttons) {
+        if (btn.innerText.includes('KÍCH HOẠT ÂM THANH')) {
+          btn.click();
+          break;
+        }
+      }
+    `).catch(err => console.log('Không thể click tự động:', err));
+  });
 }
 
 function createTray() {
