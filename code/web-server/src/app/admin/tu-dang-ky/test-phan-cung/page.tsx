@@ -117,7 +117,7 @@ export default function HardwareTestPage() {
           onChange={handleInputChange}
           rows={8}
           className="font-mono text-lg p-4"
-          style={{ backgroundColor: '#1e1e1e', color: '#4af626' }}
+          style={{ backgroundColor: '#f0fdf4', color: '#166534', border: '2px solid #22c55e' }}
           placeholder="[Click vào đây] Sau đó đưa thẻ CCCD vào thiết bị để quét..."
         />
         
@@ -183,7 +183,7 @@ export default function HardwareTestPage() {
           value={serialOutput}
           rows={8}
           className="font-mono text-lg p-4"
-          style={{ backgroundColor: '#1e1e1e', color: '#ffeb3b' }}
+          style={{ backgroundColor: '#fffbeb', color: '#b45309', border: '2px solid #f59e0b' }}
           placeholder="Dữ liệu truyền qua cổng COM sẽ hiển thị ở đây (sau khi bạn bấm Kết Nối)..."
           readOnly
         />
