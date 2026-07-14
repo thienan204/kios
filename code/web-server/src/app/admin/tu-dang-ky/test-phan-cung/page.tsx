@@ -66,8 +66,8 @@ export default function HardwareTestPage() {
         }
       }
     } catch (err: any) {
-      console.error(err);
-      if (err.name !== 'NotFoundError') { // Bỏ qua lỗi người dùng cố tình ấn Cancel
+      if (err.name !== 'NotFoundError') { // Bỏ qua lỗi người dùng cố tình ấn Cancel hoặc click ra ngoài
+        console.error(err);
         alert('Lỗi kết nối COM: ' + err.message);
       }
       setSerialPort(null);
