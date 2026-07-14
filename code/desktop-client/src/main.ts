@@ -329,7 +329,7 @@ function renderApp() {
 
 
         <button id="pauseBtn" class="w-full mt-3 bg-gray-200 hover:bg-gray-300 active:bg-gray-400 text-gray-700 font-bold py-3.5 rounded-xl border border-gray-400 shadow-sm active:translate-y-1 transition-all text-sm flex justify-center items-center gap-2">
-          KẾT THÚC / DỪNG TIẾP ĐÓN <span class="text-[10px] font-normal text-gray-500">(${sc.pause})</span>
+          KT / DỪNG TĐ <span class="text-[10px] font-normal text-gray-500">(${sc.pause})</span>
         </button>
         
         <p id="statusMsg" class="mt-2 text-xs font-semibold text-center h-4 text-red-500"></p>
