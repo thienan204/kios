@@ -306,7 +306,7 @@ function renderApp() {
         </button>
       </div>
       
-      <div class="flex-1 flex flex-col items-center justify-center p-4 relative">
+      <div class="flex-1 flex flex-col items-center justify-center px-1.5 py-3 relative">
         <p class="text-gray-500 text-xs font-medium tracking-wide uppercase mb-1">Đang gọi số</p>
         <div id="currentNumber" class="text-6xl font-black text-blue-900 drop-shadow-sm mb-4 transition-all duration-300 transform">
           ---
