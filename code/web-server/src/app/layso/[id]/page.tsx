@@ -16,6 +16,7 @@ export default function KioskPage() {
   const [areaUid, setAreaUid] = useState<string | null>(null);
   const [imageVersion, setImageVersion] = useState('');
   const [mounted, setMounted] = useState(false);
+  const [logoFailed, setLogoFailed] = useState(false);
 
   const [isBatchModalVisible, setIsBatchModalVisible] = useState(false);
   const [batchQuantity, setBatchQuantity] = useState(10);
@@ -225,6 +226,12 @@ export default function KioskPage() {
 
   return (
     <>
+      <style>{`
+        .ant-message {
+          top: auto !important;
+          bottom: 50px !important;
+        }
+      `}</style>
       {/* KHU VỰC HIỂN THỊ TRÊN MÀN HÌNH (Sẽ ẩn khi in) */}
       <div className="min-h-screen relative w-full flex flex-col items-center justify-center bg-blue-50 print:hidden p-4 md:p-8">
         
@@ -236,6 +243,7 @@ export default function KioskPage() {
             className="h-24 md:h-32 w-auto object-contain"
             onError={(e) => {
               (e.target as HTMLImageElement).style.display = 'none';
+              setLogoFailed(true);
             }}
           />
           <img 
@@ -356,10 +364,23 @@ export default function KioskPage() {
       {/* KHU VỰC CHUẨN BỊ IN (Chỉ hiện khi in) */}
       {ticketData && (
         <div id="print-area" ref={printRef} className="hidden print:block w-full max-w-[80mm] mx-auto text-center font-sans text-black bg-white px-1 py-2">
-          <h2 className="text-lg font-bold uppercase mb-1">{ticketData.area}</h2>
-          {ticketData.printHospitalName && (
-            <p className="text-xs mb-2">{ticketData.printHospitalName}</p>
+          {!logoFailed && (
+            <div className="flex justify-center mb-1">
+              <img 
+                src={`/kios/logo.png${imageVersion}`} 
+                alt="Logo" 
+                className="h-10 w-auto object-contain grayscale" 
+                onError={(e) => { 
+                  (e.target as HTMLImageElement).style.display = 'none'; 
+                  setLogoFailed(true);
+                }}
+              />
+            </div>
           )}
+          {ticketData.printHospitalName && logoFailed && (
+            <p className="text-xs font-semibold mb-1">{ticketData.printHospitalName}</p>
+          )}
+          <h2 className="text-lg font-bold uppercase mb-2">{ticketData.area}</h2>
           <hr className="border-black border-dashed mb-2" />
           
           {ticketData.printGreeting && (

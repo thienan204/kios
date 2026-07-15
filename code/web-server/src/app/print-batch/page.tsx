@@ -4,8 +4,11 @@ import React, { useEffect, useState } from 'react';
 
 export default function PrintBatchPage() {
   const [tickets, setTickets] = useState<any[]>([]);
+  const [logoFailed, setLogoFailed] = useState(false);
+  const [imageVersion, setImageVersion] = useState('');
 
   useEffect(() => {
+    setImageVersion(`?v=${Date.now()}`);
     // Read tickets from session storage
     const data = sessionStorage.getItem('batch_tickets');
     if (data) {
@@ -47,10 +50,23 @@ export default function PrintBatchPage() {
             className="w-full text-center font-sans text-black bg-white px-2 py-4 mb-4 border border-gray-300 print:border-none print:mb-0"
             style={{ pageBreakAfter: 'always' }}
           >
-            <h2 className="text-lg font-bold uppercase mb-1">{t.area}</h2>
-            {t.printHospitalName && (
-              <p className="text-xs mb-2">{t.printHospitalName}</p>
+            {!logoFailed && (
+              <div className="flex justify-center mb-1">
+                <img 
+                  src={`/kios/logo.png${imageVersion}`} 
+                  alt="Logo" 
+                  className="h-10 w-auto object-contain grayscale" 
+                  onError={(e) => { 
+                    (e.target as HTMLImageElement).style.display = 'none'; 
+                    setLogoFailed(true);
+                  }}
+                />
+              </div>
             )}
+            {t.printHospitalName && logoFailed && (
+              <p className="text-xs font-semibold mb-1">{t.printHospitalName}</p>
+            )}
+            <h2 className="text-lg font-bold uppercase mb-2">{t.area}</h2>
             <hr className="border-black border-dashed mb-2" />
             
             {t.printGreeting && (
