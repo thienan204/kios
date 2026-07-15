@@ -35,6 +35,7 @@ export default function HardwareTestPage() {
   const [serialOutput, setSerialOutput] = useState('');
   const [serialPort, setSerialPort] = useState<any>(null);
   const [baudRate, setBaudRate] = useState<number>(115200);
+  const [readMode, setReadMode] = useState<'text' | 'hex'>('hex');
   const [reader, setReader] = useState<any>(null);
 
   const connectSerial = async () => {
@@ -48,9 +49,14 @@ export default function HardwareTestPage() {
       await port.open({ baudRate: baudRate });
       setSerialPort(port);
       
-      const textDecoder = new TextDecoderStream();
-      const readableStreamClosed = port.readable.pipeTo(textDecoder.writable);
-      const newReader = textDecoder.readable.getReader();
+      let newReader;
+      if (readMode === 'text') {
+        const textDecoder = new TextDecoderStream();
+        port.readable.pipeTo(textDecoder.writable);
+        newReader = textDecoder.readable.getReader();
+      } else {
+        newReader = port.readable.getReader(); // reads Uint8Array
+      }
       setReader(newReader);
 
       alert('Đã kết nối thành công vào thiết bị COM!');
@@ -62,7 +68,15 @@ export default function HardwareTestPage() {
           break;
         }
         if (value) {
-          setSerialOutput(prev => prev + value);
+          if (readMode === 'text') {
+            setSerialOutput(prev => prev + value);
+          } else {
+            // value is Uint8Array
+            const hexString = Array.from(value as Uint8Array)
+              .map(b => b.toString(16).padStart(2, '0').toUpperCase())
+              .join(' ') + ' ';
+            setSerialOutput(prev => prev + hexString);
+          }
         }
       }
     } catch (err: any) {
@@ -159,6 +173,13 @@ export default function HardwareTestPage() {
               <Select.Option value={19200}>19200</Select.Option>
               <Select.Option value={38400}>38400</Select.Option>
               <Select.Option value={115200}>115200</Select.Option>
+            </Select>
+          </div>
+          <div>
+            <Text strong className="block mb-1">Chế độ hiển thị:</Text>
+            <Select value={readMode} onChange={setReadMode} className="w-[140px]" disabled={!!serialPort}>
+              <Select.Option value="hex">Dạng HEX (Thô)</Select.Option>
+              <Select.Option value="text">Dạng Chữ (Text)</Select.Option>
             </Select>
           </div>
           <div className="pt-6">

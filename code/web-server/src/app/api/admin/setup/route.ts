@@ -20,6 +20,7 @@ export async function GET() {
       data: {
         username: 'admin',
         password: adminPassword,
+        role: 'SUPER_ADMIN',
       },
     });
 

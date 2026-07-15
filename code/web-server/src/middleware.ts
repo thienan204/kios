@@ -16,7 +16,21 @@ export async function middleware(request: NextRequest) {
     }
 
     try {
-      await jwtVerify(token, JWT_SECRET);
+      const verified = await jwtVerify(token, JWT_SECRET);
+      const payload = verified.payload as any;
+
+      const role = payload.role;
+
+      // Giới hạn quyền STAFF không được vào admin
+      if (role === 'STAFF') {
+        return new NextResponse('Forbidden: Staff cannot access admin portal', { status: 403 });
+      }
+
+      // Giới hạn quyền ADMIN không được vào Quản lý User
+      if (role === 'ADMIN' && pathname.startsWith('/admin/users')) {
+        return new NextResponse('Forbidden: Admin cannot manage users', { status: 403 });
+      }
+
       return NextResponse.next();
     } catch (error) {
       // Token is invalid or expired

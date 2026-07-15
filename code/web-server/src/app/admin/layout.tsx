@@ -98,6 +98,11 @@ export default function AdminLayout({
       ],
     },
     {
+      key: '/admin/users',
+      icon: <SettingOutlined />,
+      label: <Link href="/admin/users">Quản lý Tài khoản</Link>,
+    },
+    {
       key: '/admin/settings',
       icon: <SettingOutlined />,
       label: <Link href="/admin/settings">Cài đặt Giao diện</Link>,

@@ -21,6 +21,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Tài khoản không tồn tại' }, { status: 401 });
     }
 
+    if (!user.isActive) {
+      return NextResponse.json({ error: 'Tài khoản đã bị khóa' }, { status: 403 });
+    }
+
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
@@ -28,7 +32,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Generate JWT token
-    const token = await new SignJWT({ userId: user.id, username: user.username })
+    const token = await new SignJWT({ userId: user.id, username: user.username, role: user.role })
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
       .setExpirationTime('24h')

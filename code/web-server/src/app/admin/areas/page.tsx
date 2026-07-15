@@ -192,7 +192,7 @@ export default function AreasPage() {
         setIsBatchModalVisible(false);
         // Lưu data vào session và mở tab mới in
         sessionStorage.setItem('batch_tickets', JSON.stringify(data.tickets));
-        window.open('/print-batch', '_blank');
+        window.open('/kios/print-batch', '_blank');
       } else {
         message.error(data.error || 'Có lỗi xảy ra');
       }
@@ -290,7 +290,7 @@ export default function AreasPage() {
         const mobilePath = `/kios/m/${record.uid}`;
 
         const getFullUrl = (path: string) => {
-           const base = process.env.NEXT_PUBLIC_SERVER_URL || (typeof window !== 'undefined' ? window.location.origin : '');
+           const base = typeof window !== 'undefined' ? window.location.origin : (process.env.NEXT_PUBLIC_SERVER_URL || '');
            return base.replace(/\/kios\/?$/, '') + path;
         };
 
@@ -626,7 +626,7 @@ export default function AreasPage() {
               <p className="text-gray-600 mb-6 font-medium">Quét mã QR bằng điện thoại để lấy số</p>
               <div className="flex justify-center bg-white p-4 rounded-xl shadow-sm border border-gray-100">
                 <QRCode 
-                  value={`${(process.env.NEXT_PUBLIC_SERVER_URL || (typeof window !== 'undefined' ? window.location.origin : '')).replace(/\/kios\/?$/, '')}/kios/m/${printArea.uid}`} 
+                  value={`${(typeof window !== 'undefined' ? window.location.origin : (process.env.NEXT_PUBLIC_SERVER_URL || '')).replace(/\/kios\/?$/, '')}/kios/m/${printArea.uid}`} 
                   size={250} 
                   color="#1e3a8a" // text-blue-900
                   errorLevel="H"
