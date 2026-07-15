@@ -47,7 +47,7 @@ export default function PrintBatchPage() {
         {tickets.map((t, i) => (
           <div 
             key={i} 
-            className="w-full text-center font-sans text-black bg-white px-2 py-4 mb-4 border border-gray-300 print:border-none print:mb-0"
+            className="w-full max-w-[80mm] mx-auto text-center font-sans text-black bg-white px-1 py-2 mb-4 border border-gray-300 print:border-none print:mb-0"
             style={{ pageBreakAfter: 'always' }}
           >
             {!logoFailed && (

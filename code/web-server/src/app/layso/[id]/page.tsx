@@ -237,14 +237,14 @@ export default function KioskPage() {
         }
       `}</style>
       {/* KHU VỰC HIỂN THỊ TRÊN MÀN HÌNH (Sẽ ẩn khi in) */}
-      <div className="min-h-screen relative w-full flex flex-col items-center justify-center bg-blue-50 print:hidden p-4 md:p-8">
+      <div className="h-screen overflow-hidden relative w-full flex flex-col items-center justify-start bg-blue-50 print:hidden p-4 md:p-8">
         
-        {/* KHU VỰC LOGO & BANNER */}
-        <div className="w-full max-w-7xl mb-10 flex flex-col md:flex-row items-center justify-between gap-6 px-4">
+        {/* KHU VỰC LOGO & BANNER (Gắn trên cùng) */}
+        <div className="w-full max-w-7xl flex flex-col md:flex-row items-center justify-between gap-4 px-4 mb-4 md:mb-8">
           <img 
             src={`/kios/logo.png${imageVersion}`}
             alt="Logo Bệnh viện" 
-            className="h-24 md:h-32 w-auto object-contain"
+            className="h-16 md:h-24 w-auto object-contain"
             onError={(e) => {
               (e.target as HTMLImageElement).style.display = 'none';
               setLogoFailed(true);
@@ -253,18 +253,19 @@ export default function KioskPage() {
           <img 
             src={`/kios/banner.png${imageVersion}`}
             alt="Banner Bệnh viện" 
-            className="h-24 md:h-32 w-auto object-contain flex-1 max-w-full md:max-w-[70%]"
+            className="h-16 md:h-24 w-auto object-contain flex-1 max-w-full md:max-w-[60%]"
             onError={(e) => {
               (e.target as HTMLImageElement).style.display = 'none';
             }}
           />
         </div>
 
-        <h1 className="text-4xl md:text-6xl font-extrabold text-blue-900 mb-12 text-center uppercase tracking-tight">
+        <h1 className="text-4xl md:text-6xl font-extrabold text-blue-900 mb-4 text-center uppercase tracking-tight">
           {areaName}
         </h1>
 
-        {ticketData ? (
+        <div className="flex-1 w-full flex flex-col items-center justify-center">
+          {ticketData ? (
           <div className="text-center animate-pulse">
             <h2 className="text-3xl text-green-600 font-bold mb-4">Vui lòng lấy phiếu bên dưới!</h2>
             <div className="text-9xl font-black text-blue-800">{ticketData.number}</div>
@@ -272,7 +273,7 @@ export default function KioskPage() {
         ) : errorMsg === 'HẾT GIỜ TIẾP ĐÓN' ? (
           <button 
             disabled 
-            className="w-3/4 max-w-2xl aspect-video bg-gray-400 text-white text-5xl md:text-7xl font-black rounded-3xl shadow-inner cursor-not-allowed opacity-80"
+            className="w-full max-w-3xl h-48 md:h-72 bg-gray-400 text-white text-5xl md:text-7xl font-black rounded-3xl shadow-inner cursor-not-allowed opacity-80 flex items-center justify-center"
           >
             HẾT GIỜ TIẾP ĐÓN
           </button>
@@ -280,7 +281,7 @@ export default function KioskPage() {
           <button 
             onClick={handleGetTicket} 
             disabled={loading}
-            className={`w-3/4 max-w-2xl aspect-video bg-blue-600 hover:bg-blue-500 active:bg-blue-800 text-white text-6xl md:text-8xl font-black rounded-3xl shadow-[0_20px_50px_rgba(37,99,235,0.5)] transition-all transform hover:scale-105 active:scale-95 ${loading ? 'opacity-50 cursor-wait' : ''}`}
+            className={`w-full max-w-3xl h-48 md:h-72 bg-blue-600 hover:bg-blue-500 active:bg-blue-800 text-white text-6xl md:text-8xl font-black rounded-3xl shadow-[0_20px_50px_rgba(37,99,235,0.5)] transition-all transform hover:scale-105 active:scale-95 flex items-center justify-center ${loading ? 'opacity-50 cursor-wait' : ''}`}
           >
             {loading ? 'ĐANG XỬ LÝ...' : 'BẤM LẤY SỐ'}
           </button>
@@ -288,13 +289,14 @@ export default function KioskPage() {
 
         {/* Hiển thị số vừa lấy */}
         {!ticketData && errorMsg !== 'HẾT GIỜ TIẾP ĐÓN' && lastIssuedNumber !== null && (
-          <div className="mt-12 text-center fade-in">
+          <div className="mt-8 text-center fade-in">
             <p className="text-xl text-gray-500 font-semibold mb-2">SỐ VỪA ĐƯỢC CẤP</p>
             <div className="text-5xl font-black text-gray-700 bg-white px-8 py-3 rounded-full shadow-sm border border-gray-200">
               {lastIssuedNumber}
             </div>
           </div>
         )}
+        </div>
 
         {/* Mã QR Lấy Số Qua Điện Thoại - Góc dưới bên phải */}
         <div className="absolute bottom-6 right-6 bg-white p-4 rounded-2xl shadow-xl border border-gray-200 flex flex-col items-center">

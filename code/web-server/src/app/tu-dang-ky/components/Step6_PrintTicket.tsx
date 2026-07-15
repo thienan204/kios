@@ -13,10 +13,16 @@ export default function Step6_PrintTicket({ sessionData, onComplete }: Props) {
   const [status, setStatus] = useState<'printing' | 'done'>('printing');
   const [countdown, setCountdown] = useState(5);
 
+  const [logoFailed, setLogoFailed] = useState(false);
+
   useEffect(() => {
     // Giả lập thời gian máy in đang chạy (2 giây)
     const printTimer = setTimeout(() => {
       setStatus('done');
+      // Gọi lệnh in thật
+      setTimeout(() => {
+        window.print();
+      }, 500);
     }, 2000);
 
     return () => clearTimeout(printTimer);
@@ -101,6 +107,46 @@ export default function Step6_PrintTicket({ sessionData, onComplete }: Props) {
         )}
       </div>
 
+      {/* KHU VỰC CHUẨN BỊ IN (Chỉ hiện khi in) */}
+      {status === 'done' && (
+        <div id="print-area" className="hidden print:block w-full max-w-[80mm] mx-auto text-center font-sans text-black bg-white px-1 py-2">
+          {!logoFailed && (
+            <div className="flex justify-center mb-1">
+              <img 
+                src={`/kios/logo.png`} 
+                alt="Logo" 
+                className="h-10 w-auto object-contain grayscale" 
+                onError={(e) => { 
+                  (e.target as HTMLImageElement).style.display = 'none'; 
+                  setLogoFailed(true);
+                }}
+              />
+            </div>
+          )}
+          {logoFailed && (
+            <p className="text-xs font-semibold mb-1">Bệnh viện Đa khoa Tỉnh Lạng Sơn</p>
+          )}
+          <h2 className="text-lg font-bold uppercase mb-2">ĐĂNG KÝ KHÁM BỆNH</h2>
+          <hr className="border-black border-dashed mb-2" />
+          
+          <p className="text-sm">SỐ THỨ TỰ CỦA BẠN</p>
+          <div className="text-[100px] leading-none font-black my-1">105</div>
+          
+          <hr className="border-black border-dashed my-2" />
+          <div className="text-left text-sm mt-2 mb-2 space-y-1">
+            <p><span className="font-semibold">Bệnh nhân:</span> {sessionData.patientInfo?.fullName || 'NGUYỄN VĂN A'}</p>
+            {sessionData.serviceType === 'BHYT' && (
+              <p><span className="font-semibold">Mã BHYT:</span> {sessionData.bhytNumber}</p>
+            )}
+            <p><span className="font-semibold">Chuyên khoa:</span> {sessionData.department}</p>
+          </div>
+          <hr className="border-black border-dashed my-2" />
+
+          <p className="text-xs mb-1">Thời gian: {new Date().toLocaleString('vi-VN')}</p>
+          <p className="text-[10px] mt-4 italic">Vui lòng di chuyển đến phòng khám và chờ gọi tên.</p>
+        </div>
+      )}
+
       <style jsx>{`
         .animation-fade-in {
           animation: fadeIn 0.5s ease-out forwards;
@@ -115,6 +161,10 @@ export default function Step6_PrintTicket({ sessionData, onComplete }: Props) {
         @keyframes zoomIn {
           from { opacity: 0; transform: scale(0.8); }
           to { opacity: 1; transform: scale(1); }
+        }
+        @media print {
+          @page { margin: 0; size: 80mm auto; }
+          body { background: white !important; }
         }
       `}</style>
     </div>
