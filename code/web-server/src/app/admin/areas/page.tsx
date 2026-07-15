@@ -28,6 +28,7 @@ export default function AreasPage() {
   const [batchQuantity, setBatchQuantity] = useState<number | null>(50);
   const [isBatching, setIsBatching] = useState(false);
   const [areaGroups, setAreaGroups] = useState<any[]>([]);
+  const [previewLogoFailed, setPreviewLogoFailed] = useState(false);
 
   const [form] = Form.useForm();
 
@@ -435,12 +436,12 @@ export default function AreasPage() {
         open={isModalVisible}
         onCancel={() => setIsModalVisible(false)}
         footer={null}
-        width={1000}
+        width={1300}
       >
         <Form form={form} layout="vertical" onFinish={onFinish}>
           <Row gutter={24}>
             {/* Cột trái: Cấu hình chung */}
-            <Col span={12}>
+            <Col span={8}>
               <Form.Item name="groupId" label="Nhóm / Cơ sở (Để trống nếu không phân nhóm)">
                 <Select
                   allowClear
@@ -510,8 +511,8 @@ export default function AreasPage() {
               </div>
             </Col>
 
-            {/* Cột phải: Cấu hình hiển thị */}
-            <Col span={12}>
+            {/* Cột giữa: Cấu hình hiển thị */}
+            <Col span={8}>
               <Form.Item 
                 name="audioTemplate"  
                 label="Mẫu câu đọc loa" 
@@ -538,6 +539,61 @@ export default function AreasPage() {
                   <Input.TextArea rows={2} placeholder="Ví dụ: Vui lòng ngồi chờ đến lượt gọi. (Để trống sẽ không in)" />
                 </Form.Item>
               </div>
+            </Col>
+
+            {/* Cột phải: Xem trước mẫu in */}
+            <Col span={8}>
+              <Form.Item
+                noStyle
+                shouldUpdate={(prevValues, currentValues) => 
+                  prevValues.printHospitalName !== currentValues.printHospitalName ||
+                  prevValues.printGreeting !== currentValues.printGreeting ||
+                  prevValues.printFooter !== currentValues.printFooter ||
+                  prevValues.name !== currentValues.name
+                }
+              >
+                {({ getFieldValue }) => {
+                  const pName = getFieldValue('printHospitalName');
+                  const pGreeting = getFieldValue('printGreeting');
+                  const pFooter = getFieldValue('printFooter');
+                  const aName = getFieldValue('name') || 'Tên Khu Vực';
+                  
+                  return (
+                    <div className="bg-gray-100 p-4 rounded border border-gray-200 mt-6 md:mt-0 flex flex-col items-center">
+                      <h4 className="font-semibold mb-4 text-gray-700 w-full text-left">Xem trước mẫu in</h4>
+                      <div className="bg-white border border-gray-300 shadow-sm p-4 w-[80mm] text-center font-sans text-black origin-top">
+                        {!previewLogoFailed && (
+                          <div className="flex justify-center mb-1">
+                            <img 
+                              src={`/kios/logo.png?v=${Date.now()}`} 
+                              alt="Logo" 
+                              className="h-10 w-auto object-contain grayscale" 
+                              onError={(e) => { 
+                                (e.target as HTMLImageElement).style.display = 'none'; 
+                                setPreviewLogoFailed(true);
+                              }}
+                            />
+                          </div>
+                        )}
+                        {pName && previewLogoFailed && (
+                          <p className="text-xs font-semibold mb-1">{pName}</p>
+                        )}
+                        <h2 className="text-lg font-bold uppercase mb-2">{aName}</h2>
+                        <hr className="border-black border-dashed mb-2" />
+                        
+                        {pGreeting && <p className="text-sm">{pGreeting}</p>}
+                        <div className="text-[100px] leading-none font-black my-1">99</div>
+                        
+                        <hr className="border-black border-dashed my-2" />
+                        <p className="text-xs mb-1">Thời gian: {dayjs().format('HH:mm:ss DD/MM/YYYY')}</p>
+                        <p className="text-xs font-bold">Số người đang chờ: 5</p>
+                        
+                        {pFooter && <p className="text-[10px] mt-4 italic">{pFooter}</p>}
+                      </div>
+                    </div>
+                  );
+                }}
+              </Form.Item>
             </Col>
           </Row>
 

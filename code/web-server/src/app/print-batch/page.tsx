@@ -72,7 +72,7 @@ export default function PrintBatchPage() {
             {t.printGreeting && (
               <p className="text-sm">{t.printGreeting}</p>
             )}
-            <div className="text-6xl font-black my-2">{t.number}</div>
+            <div className="text-[100px] leading-none font-black my-1">{t.number}</div>
             
             <hr className="border-black border-dashed my-2" />
             <p className="text-xs mb-1">Thời gian: {t.time}</p>
@@ -87,7 +87,7 @@ export default function PrintBatchPage() {
 
       <style dangerouslySetInnerHTML={{__html: `
         @media print {
-          @page { margin: 0; }
+          @page { margin: 0; size: 80mm auto; }
           body {
             background: white !important;
           }

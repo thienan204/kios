@@ -231,6 +231,10 @@ export default function KioskPage() {
           top: auto !important;
           bottom: 50px !important;
         }
+        @media print {
+          @page { margin: 0; size: 80mm auto; }
+          body { background: white !important; }
+        }
       `}</style>
       {/* KHU VỰC HIỂN THỊ TRÊN MÀN HÌNH (Sẽ ẩn khi in) */}
       <div className="min-h-screen relative w-full flex flex-col items-center justify-center bg-blue-50 print:hidden p-4 md:p-8">
@@ -386,7 +390,7 @@ export default function KioskPage() {
           {ticketData.printGreeting && (
             <p className="text-sm">{ticketData.printGreeting}</p>
           )}
-          <div className="text-6xl font-black my-2">{ticketData.number}</div>
+          <div className="text-[100px] leading-none font-black my-1">{ticketData.number}</div>
           
           <hr className="border-black border-dashed my-2" />
           <p className="text-xs mb-1">Thời gian: {ticketData.time}</p>
