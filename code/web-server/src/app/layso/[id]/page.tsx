@@ -187,7 +187,7 @@ export default function KioskPage() {
       if (res.ok) {
         setIsBatchModalVisible(false);
         sessionStorage.setItem('batch_tickets', JSON.stringify(data.tickets));
-        window.open('/print-batch', '_blank');
+        window.open('/kios/print-batch', '_blank');
       } else {
         message.error(data.error || 'Có lỗi xảy ra');
       }
