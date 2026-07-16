@@ -234,12 +234,15 @@ export default function KioskPage() {
         @media print {
           @page { margin: 0; size: 80mm auto; }
           html, body { 
-            margin: 0 !important;
-            padding: 0 !important;
+            margin: 0 !important; 
+            padding: 0 !important; 
             background: white !important; 
-            display: block !important;
-            height: auto !important;
-            min-height: auto !important;
+          }
+          #print-area {
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            margin: 0 !important;
           }
         }
       `}</style>
@@ -376,7 +379,7 @@ export default function KioskPage() {
 
       {/* KHU VỰC CHUẨN BỊ IN (Chỉ hiện khi in) */}
       {ticketData && (
-        <div id="print-area" ref={printRef} className="hidden print:block w-full max-w-[80mm] mx-auto text-center font-sans text-black bg-white px-1 pt-0 pb-2">
+        <div id="print-area" ref={printRef} className="hidden print:block w-full max-w-[80mm] mx-auto text-center font-sans text-black bg-white px-1 py-2">
           {!logoFailed && (
             <div className="flex justify-center mb-1">
               <img 
@@ -399,7 +402,7 @@ export default function KioskPage() {
           {ticketData.printGreeting && (
             <p className="text-sm">{ticketData.printGreeting}</p>
           )}
-          <div className="text-[150px] leading-none font-black my-1">{ticketData.number}</div>
+          <div className="text-[100px] leading-none font-black my-1">{ticketData.number}</div>
           
           <hr className="border-black border-dashed my-2" />
           <p className="text-xs mb-1">Thời gian: {ticketData.time}</p>
