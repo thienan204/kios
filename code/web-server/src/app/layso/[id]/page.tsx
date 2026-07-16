@@ -233,7 +233,14 @@ export default function KioskPage() {
         }
         @media print {
           @page { margin: 0; size: 80mm auto; }
-          body { background: white !important; }
+          html, body { 
+            margin: 0 !important;
+            padding: 0 !important;
+            background: white !important; 
+            display: block !important;
+            height: auto !important;
+            min-height: auto !important;
+          }
         }
       `}</style>
       {/* KHU VỰC HIỂN THỊ TRÊN MÀN HÌNH (Sẽ ẩn khi in) */}
@@ -369,7 +376,7 @@ export default function KioskPage() {
 
       {/* KHU VỰC CHUẨN BỊ IN (Chỉ hiện khi in) */}
       {ticketData && (
-        <div id="print-area" ref={printRef} className="hidden print:block w-full max-w-[80mm] mx-auto text-center font-sans text-black bg-white px-1 py-2">
+        <div id="print-area" ref={printRef} className="hidden print:block w-full max-w-[80mm] mx-auto text-center font-sans text-black bg-white px-1 pt-0 pb-2">
           {!logoFailed && (
             <div className="flex justify-center mb-1">
               <img 
@@ -392,9 +399,9 @@ export default function KioskPage() {
           {ticketData.printGreeting && (
             <p className="text-sm">{ticketData.printGreeting}</p>
           )}
-          <div className="text-[100px] leading-none font-black my-1">{ticketData.number}</div>
+          <div className="text-[180px] leading-[0.8] font-black -mt-2 -mb-4">{ticketData.number}</div>
           
-          <hr className="border-black border-dashed my-2" />
+          <hr className="border-black border-dashed mb-2 mt-4" />
           <p className="text-xs mb-1">Thời gian: {ticketData.time}</p>
           <p className="text-xs font-bold">Số người đang chờ: {ticketData.waiting}</p>
           
