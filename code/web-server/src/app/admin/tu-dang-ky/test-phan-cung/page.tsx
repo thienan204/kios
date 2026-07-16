@@ -103,55 +103,6 @@ export default function HardwareTestPage() {
     }
   };
 
-  // --- STATE CHO CHẾ ĐỘ WEBSOCKET (LOCAL SERVICE) ---
-  const [wsUrl, setWsUrl] = useState('ws://127.0.0.1:5000');
-  const [wsOutput, setWsOutput] = useState('');
-  const [wsStatus, setWsStatus] = useState<'disconnected' | 'connecting' | 'connected'>('disconnected');
-  const wsRef = useRef<WebSocket | null>(null);
-
-  const connectWebSocket = () => {
-    if (!wsUrl) {
-      alert('Vui lòng nhập địa chỉ WebSocket!');
-      return;
-    }
-    
-    try {
-      setWsStatus('connecting');
-      const ws = new WebSocket(wsUrl);
-      
-      ws.onopen = () => {
-        setWsStatus('connected');
-        setWsOutput(prev => prev + `\n[HỆ THỐNG] Đã kết nối thành công tới ${wsUrl}\n`);
-      };
-      
-      ws.onmessage = (event) => {
-        setWsOutput(prev => prev + `\n[DỮ LIỆU NHẬN]: ${event.data}\n`);
-      };
-      
-      ws.onerror = (error) => {
-        setWsOutput(prev => prev + `\n[LỖI] Không thể kết nối. Vui lòng kiểm tra lại phần mềm CardReader đã bật chưa hoặc Port đã đúng chưa.\n`);
-        setWsStatus('disconnected');
-      };
-      
-      ws.onclose = () => {
-        setWsOutput(prev => prev + `\n[HỆ THỐNG] Đã ngắt kết nối WebSocket.\n`);
-        setWsStatus('disconnected');
-      };
-      
-      wsRef.current = ws;
-    } catch (err: any) {
-      alert('Lỗi khởi tạo WebSocket: ' + err.message);
-      setWsStatus('disconnected');
-    }
-  };
-
-  const disconnectWebSocket = () => {
-    if (wsRef.current) {
-      wsRef.current.close();
-      wsRef.current = null;
-    }
-  };
-
   return (
     <div className="max-w-4xl mx-auto">
       <div className="mb-6">
@@ -164,8 +115,7 @@ export default function HardwareTestPage() {
         description={
           <ol className="ml-4 mt-2 list-decimal">
             <li><strong>Chế độ giả lập bàn phím:</strong> Click vào ô đen ở Cách 1, rồi quét thẻ xem có ra chữ không.</li>
-            <li><strong>Chế độ Cổng COM ảo:</strong> Bấm "Kết nối cổng COM" ở Cách 2, chọn thiết bị trong danh sách, rồi quét thẻ.</li>
-            <li><strong>Chế độ Phần mềm chạy ngầm (WebSocket):</strong> Nhập URL của CardReader (thường là <code>ws://127.0.0.1:PORT</code>) ở Cách 3 và bấm Kết nối.</li>
+            <li><strong>Chế độ Cổng COM ảo:</strong> Bấm "Kết nối cổng COM" ở Cách 2, chọn thiết bị trong danh sách sổ xuống của Chrome, rồi quét thẻ.</li>
           </ol>
         }
         type="info"
@@ -268,64 +218,6 @@ export default function HardwareTestPage() {
             <Button type="primary" style={{backgroundColor: '#e65100'}} icon={<CopyOutlined />} onClick={() => {
               navigator.clipboard.writeText(serialOutput);
               alert('Đã copy dữ liệu Cổng COM, bạn gửi qua cho tôi nhé!');
-            }}>Copy Dữ Liệu</Button>
-          </Space>
-        </div>
-      </Card>
-
-      {/* --- CÁCH 3: WEBSOCKET --- */}
-      <Card title={<><ApiOutlined className="mr-2"/>CÁCH 3: Test kết nối phần mềm đọc thẻ chạy ngầm (WebSocket)</>} className="shadow-sm border-purple-200 mt-8 mb-8">
-        <div className="flex gap-4 items-center mb-4 bg-purple-50 p-4 rounded-lg border border-purple-100">
-          <div className="flex-1">
-            <Text strong className="block mb-1">Địa chỉ WebSocket (URL):</Text>
-            <Input 
-              value={wsUrl} 
-              onChange={(e) => setWsUrl(e.target.value)} 
-              disabled={wsStatus !== 'disconnected'}
-              placeholder="VD: ws://127.0.0.1:5000"
-            />
-            <Text type="secondary" className="text-xs mt-1 block">
-              Gợi ý: Mở file cấu hình của CardReader.exe trên máy Kiosk để xem nó đang chạy Port số mấy (5000, 8080, 8181...).
-            </Text>
-          </div>
-          <div className="pt-5">
-            {wsStatus === 'disconnected' ? (
-              <Button type="primary" style={{backgroundColor: '#7e22ce'}} icon={<ApiOutlined />} onClick={connectWebSocket}>
-                Kết Nối Socket
-              </Button>
-            ) : wsStatus === 'connecting' ? (
-              <Button loading>Đang kết nối...</Button>
-            ) : (
-              <Button danger icon={<DisconnectOutlined />} onClick={disconnectWebSocket}>
-                Ngắt Kết Nối
-              </Button>
-            )}
-          </div>
-          {wsStatus === 'connected' && (
-            <div className="pt-5">
-              <Tag color="purple" className="text-sm py-1 px-3">Đã kết nối Socket</Tag>
-            </div>
-          )}
-        </div>
-
-        <Input.TextArea
-          value={wsOutput}
-          rows={8}
-          className="font-mono text-lg p-4"
-          style={{ backgroundColor: '#faf5ff', color: '#6b21a8', border: '2px solid #a855f7' }}
-          placeholder="Dữ liệu JSON từ phần mềm CardReader.exe sẽ hiển thị ở đây..."
-          readOnly
-        />
-        
-        <div className="flex justify-between items-center mt-4">
-          <Text type="secondary">
-            Dùng cách này nếu phần mềm của thiết bị gửi dữ liệu qua Socket cục bộ.
-          </Text>
-          <Space>
-            <Button icon={<ClearOutlined />} onClick={() => setWsOutput('')}>Xóa kết quả</Button>
-            <Button type="primary" style={{backgroundColor: '#7e22ce'}} icon={<CopyOutlined />} onClick={() => {
-              navigator.clipboard.writeText(wsOutput);
-              alert('Đã copy dữ liệu WebSocket!');
             }}>Copy Dữ Liệu</Button>
           </Space>
         </div>

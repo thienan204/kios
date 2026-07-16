@@ -130,9 +130,9 @@ export default function Step6_PrintTicket({ sessionData, onComplete }: Props) {
           <hr className="border-black border-dashed mb-2" />
           
           <p className="text-sm">SỐ THỨ TỰ CỦA BẠN</p>
-          <div className="text-[180px] leading-[0.8] font-black -mt-2 -mb-4">105</div>
+          <div className="text-[150px] leading-none font-black my-1">105</div>
           
-          <hr className="border-black border-dashed mb-2 mt-4" />
+          <hr className="border-black border-dashed my-2" />
           <div className="text-left text-sm mt-2 mb-2 space-y-1">
             <p><span className="font-semibold">Bệnh nhân:</span> {sessionData.patientInfo?.fullName || 'NGUYỄN VĂN A'}</p>
             {sessionData.serviceType === 'BHYT' && (

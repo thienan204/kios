@@ -399,9 +399,9 @@ export default function KioskPage() {
           {ticketData.printGreeting && (
             <p className="text-sm">{ticketData.printGreeting}</p>
           )}
-          <div className="text-[180px] leading-[0.8] font-black -mt-2 -mb-4">{ticketData.number}</div>
+          <div className="text-[150px] leading-none font-black my-1">{ticketData.number}</div>
           
-          <hr className="border-black border-dashed mb-2 mt-4" />
+          <hr className="border-black border-dashed my-2" />
           <p className="text-xs mb-1">Thời gian: {ticketData.time}</p>
           <p className="text-xs font-bold">Số người đang chờ: {ticketData.waiting}</p>
           
