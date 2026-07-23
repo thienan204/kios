@@ -109,7 +109,7 @@ export default function Step6_PrintTicket({ sessionData, onComplete }: Props) {
 
       {/* KHU VỰC CHUẨN BỊ IN (Chỉ hiện khi in) */}
       {status === 'done' && (
-        <div id="print-area" className="hidden print:block w-full max-w-[80mm] mx-auto text-center font-sans text-black bg-white px-1 pt-0 pb-2">
+        <div id="print-area" className="hidden print:block w-full max-w-[80mm] mx-auto text-center font-sans text-black bg-white px-1 py-2">
           {!logoFailed && (
             <div className="flex justify-center mb-1">
               <img 
@@ -130,7 +130,7 @@ export default function Step6_PrintTicket({ sessionData, onComplete }: Props) {
           <hr className="border-black border-dashed mb-2" />
           
           <p className="text-sm">SỐ THỨ TỰ CỦA BẠN</p>
-          <div className="text-[150px] leading-none font-black my-1">105</div>
+          <div className="text-[100px] leading-none font-black my-1">105</div>
           
           <hr className="border-black border-dashed my-2" />
           <div className="text-left text-sm mt-2 mb-2 space-y-1">
@@ -164,14 +164,7 @@ export default function Step6_PrintTicket({ sessionData, onComplete }: Props) {
         }
         @media print {
           @page { margin: 0; size: 80mm auto; }
-          html, body {
-            margin: 0 !important;
-            padding: 0 !important;
-            background: white !important;
-            display: block !important;
-            height: auto !important;
-            min-height: auto !important;
-          }
+          body { background: white !important; }
         }
       `}</style>
     </div>
