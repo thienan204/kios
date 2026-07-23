@@ -286,6 +286,7 @@ export default function AreasPage() {
       key: 'path',
       render: (_: any, record: any) => {
         const kioskPath = `/kios/layso/${record.id}`;
+        const kioskQrPath = `/kios/layso-qr/${record.id}`;
         const audioPath = `/kios/audio/${record.id}`;
         const tvPath = `/kios/tv/${record.id}`;
         const mobilePath = `/kios/m/${record.uid}`;
@@ -315,6 +316,17 @@ export default function AreasPage() {
                   <Tag icon={<CheckCircleOutlined />} color="success" className="m-0 ml-1">Trống</Tag>
                 </Tooltip>
               )}
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold text-gray-500 w-12">Kiosk QR:</span>
+              <Typography.Text 
+                copyable={{ text: getFullUrl(kioskQrPath) }}
+                className="bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200 text-indigo-700 font-mono text-xs"
+              >
+                {kioskQrPath}
+              </Typography.Text>
+              <Button size="small" type="link" href={getFullUrl(kioskQrPath)} target="_blank" className="p-0 text-indigo-600">Mở</Button>
             </div>
             
             <div className="flex items-center gap-2">

@@ -16,7 +16,7 @@ function isTimeInRanges(
 
 export async function POST(req: Request) {
   try {
-    const { areaId, phoneNumber } = await req.json();
+    const { areaId, phoneNumber, customerName } = await req.json();
 
     if (!areaId) {
       return NextResponse.json({ error: 'Thiếu thông tin khu vực' }, { status: 400 });
@@ -153,6 +153,7 @@ export async function POST(req: Request) {
         areaId: Number(areaId),
         status: 'WAITING',
         phoneNumber: phoneNumber || null,
+        customerName: customerName || null,
       },
     });
 
