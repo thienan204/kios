@@ -9,7 +9,7 @@ import customParseFormat from 'dayjs/plugin/customParseFormat';
 dayjs.extend(customParseFormat);
 
 export default function AreasPage() {
-  const [areas, setAreas] = useState([]);
+  const [areas, setAreas] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [unlocking, setUnlocking] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
