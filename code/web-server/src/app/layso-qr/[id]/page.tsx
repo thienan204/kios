@@ -13,6 +13,7 @@ export default function KioskQRPage() {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isLockedOut, setIsLockedOut] = useState(false);
+  const [loadingText, setLoadingText] = useState('ĐANG XỬ LÝ...');
   const [areaName, setAreaName] = useState<string>('Hệ thống lấy số tự động');
   const [areaUid, setAreaUid] = useState<string | null>(null);
   const [imageVersion, setImageVersion] = useState('');
@@ -92,142 +93,105 @@ export default function KioskQRPage() {
     claimDevice();
   }, [areaId]);
 
+  const processQRData = async (scannedData: string) => {
+    if (loading || isLockedOut || errorMsg === 'HẾT GIỜ TIẾP ĐÓN') return;
+    
+    setLoading(true);
+    setErrorMsg(null);
+    setTicketData(null);
+    setLoadingText('Đang tra cứu hệ thống Bệnh viện...');
+
+    try {
+      // 1. Gọi API Bridge để tra cứu HIS
+      const hisRes = await fetch('/api/his/lookup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ qrData: scannedData }),
+      });
+      const hisResult = await hisRes.json();
+
+      if (!hisResult.success) {
+        message.error(hisResult.error || 'Không tìm thấy thông tin bệnh nhân trên HIS');
+        setErrorMsg(hisResult.error || 'Không tìm thấy thông tin bệnh nhân');
+        setLoading(false);
+        setTimeout(() => setErrorMsg(null), 5000); // Tự ẩn lỗi sau 5s để quét tiếp
+        return;
+      }
+
+      // 2. Lấy được thông tin từ HIS, tiến hành gọi API cấp số
+      setLoadingText('Đang cấp số thứ tự...');
+      const patientInfo = hisResult.data;
+      const phone = patientInfo.phone || patientInfo.patientId || scannedData;
+      const name = patientInfo.name || '';
+      const extraInfo = patientInfo;
+
+      const res = await fetch('/kios/api/tickets/issue', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          areaId, 
+          phoneNumber: phone,
+          customerName: name
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setTicketData({
+          number: data.ticketNumber,
+          area: data.areaName,
+          waiting: data.waitingCount,
+          time: new Date(data.issuedAt).toLocaleString('vi-VN'),
+          customerName: name,
+          extraInfo: extraInfo,
+          printHospitalName: data.printHospitalName,
+          printGreeting: data.printGreeting,
+          printFooter: data.printFooter,
+        });
+        
+        message.success(`Đã lấy số thành công cho: ${name}`);
+        
+        setTimeout(() => {
+          try {
+            window.print();
+          } catch (e) {
+            console.log('Không thể gọi lệnh in trên thiết bị này');
+          }
+          
+          const resetDelay = process.env.NEXT_PUBLIC_KIOSK_RESET_DELAY 
+            ? parseInt(process.env.NEXT_PUBLIC_KIOSK_RESET_DELAY) 
+            : 5000; 
+            
+          setTimeout(() => setTicketData(null), resetDelay);
+        }, 500);
+
+      } else {
+        if (data.outOfHours) {
+          setErrorMsg('HẾT GIỜ TIẾP ĐÓN');
+        } else {
+          message.error(data.error || 'Lỗi cấp số từ máy chủ');
+          setErrorMsg(data.error || 'Lỗi cấp số');
+          setTimeout(() => setErrorMsg(null), 5000);
+        }
+      }
+    } catch (err) {
+      message.error('LỖI KẾT NỐI MÁY CHỦ: Không thể gọi API.');
+      setErrorMsg('LỖI MẠNG: Xin vui lòng thử lại');
+      setTimeout(() => setErrorMsg(null), 5000);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Hook xử lý khi máy quét QR quét thành công
   useBarcodeScanner({
-    onScan: async (scannedData) => {
-      if (loading || isLockedOut || errorMsg === 'HẾT GIỜ TIẾP ĐÓN') return;
-      
-      let phone = '';
-      let name = '';
-      let extraInfo: any = null;
-  
-      try {
-        const parsed = JSON.parse(scannedData);
-        phone = parsed.phone || parsed.phoneNumber || '';
-        name = parsed.name || parsed.patientName || parsed.customerName || '';
-        extraInfo = parsed;
-      } catch (e) {
-        // Nếu không phải JSON, giả định nó là chuỗi định danh (SĐT hoặc PatientID)
-        phone = scannedData;
-      }
-  
-      setLoading(true);
-      setErrorMsg(null);
-      setTicketData(null);
-  
-      try {
-        const res = await fetch('/kios/api/tickets/issue', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            areaId, 
-            phoneNumber: phone,
-            customerName: name
-          }),
-        });
-  
-        const data = await res.json();
-  
-        if (res.ok) {
-          setTicketData({
-            number: data.ticketNumber,
-            area: data.areaName,
-            waiting: data.waitingCount,
-            time: new Date(data.issuedAt).toLocaleString('vi-VN'),
-            customerName: name,
-            extraInfo: extraInfo,
-            printHospitalName: data.printHospitalName,
-            printGreeting: data.printGreeting,
-            printFooter: data.printFooter,
-          });
-          
-          message.success(`Đã quét mã và lấy số thành công!`);
-          
-          setTimeout(() => {
-            try {
-              window.print();
-            } catch (e) {
-              console.log('Không thể gọi lệnh in trên thiết bị này');
-            }
-            
-            const resetDelay = process.env.NEXT_PUBLIC_KIOSK_RESET_DELAY 
-              ? parseInt(process.env.NEXT_PUBLIC_KIOSK_RESET_DELAY) 
-              : 5000; // Để lâu hơn chút để ngta đọc tên
-              
-            setTimeout(() => setTicketData(null), resetDelay);
-          }, 500);
-  
-        } else {
-          if (data.outOfHours) {
-            setErrorMsg('HẾT GIỜ TIẾP ĐÓN');
-          } else {
-            message.error(data.error || 'Lỗi cấp số từ máy chủ');
-          }
-        }
-      } catch (err) {
-        message.error('LỖI KẾT NỐI MÁY CHỦ: Không thể gọi API.');
-      } finally {
-        setLoading(false);
-      }
-    }
+    onScan: processQRData
   });
 
   // Gán hàm onScan vào ref để test
   useEffect(() => {
-    onScanRef.current = async (scannedData: string) => {
-      // Gọi lại logic parse ở trên để test
-      if (loading || isLockedOut || errorMsg === 'HẾT GIỜ TIẾP ĐÓN') return;
-      
-      let phone = '';
-      let name = '';
-      let extraInfo: any = null;
-  
-      try {
-        const parsed = JSON.parse(scannedData);
-        phone = parsed.phone || parsed.phoneNumber || '';
-        name = parsed.name || parsed.patientName || parsed.customerName || '';
-        extraInfo = parsed;
-      } catch (e) {
-        phone = scannedData;
-      }
-  
-      setLoading(true);
-      setErrorMsg(null);
-      setTicketData(null);
-  
-      try {
-        const res = await fetch('/kios/api/tickets/issue', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ areaId, phoneNumber: phone, customerName: name }),
-        });
-        const data = await res.json();
-        if (res.ok) {
-          setTicketData({
-            number: data.ticketNumber,
-            area: data.areaName,
-            waiting: data.waitingCount,
-            time: new Date(data.issuedAt).toLocaleString('vi-VN'),
-            customerName: name,
-            extraInfo: extraInfo,
-            printHospitalName: data.printHospitalName,
-            printGreeting: data.printGreeting,
-            printFooter: data.printFooter,
-          });
-          message.success(`Đã quét mã và lấy số thành công!`);
-          setTimeout(() => {
-            try { window.print(); } catch (e) {}
-            setTimeout(() => setTicketData(null), 5000);
-          }, 500);
-        } else {
-          message.error(data.error || 'Lỗi cấp số từ máy chủ');
-        }
-      } catch (err) {
-        message.error('LỖI KẾT NỐI MÁY CHỦ');
-      } finally {
-        setLoading(false);
-      }
-    };
+    onScanRef.current = processQRData;
   }, [loading, isLockedOut, errorMsg, areaId]);
 
   if (isLockedOut) {
@@ -311,7 +275,13 @@ export default function KioskQRPage() {
               {loading ? (
                 <div className="flex flex-col items-center">
                   <div className="w-24 h-24 border-8 border-indigo-500 border-t-transparent rounded-full animate-spin mb-8"></div>
-                  <h2 className="text-4xl font-bold text-indigo-600">ĐANG XỬ LÝ...</h2>
+                  <h2 className="text-4xl font-bold text-indigo-600">{loadingText}</h2>
+                </div>
+              ) : errorMsg ? (
+                <div className="flex flex-col items-center text-center">
+                  <div className="w-24 h-24 bg-red-100 text-red-600 rounded-full flex items-center justify-center text-6xl mb-6">X</div>
+                  <h2 className="text-3xl font-bold text-red-600 mb-2">{errorMsg}</h2>
+                  <p className="text-gray-500">Hệ thống sẽ tự động quay lại sau giây lát...</p>
                 </div>
               ) : (
                 <>

@@ -37,9 +37,16 @@ export default function AreasPage() {
     try {
       const res = await fetch('/kios/api/areas');
       const data = await res.json();
-      setAreas(data);
+      if (Array.isArray(data)) {
+        setAreas(data);
+      } else {
+        console.error('Data from /kios/api/areas is not an array:', data);
+        message.error(data.error || 'Dữ liệu khu vực không hợp lệ');
+        setAreas([]);
+      }
     } catch (error) {
       message.error('Không thể tải dữ liệu');
+      setAreas([]);
     } finally {
       setLoading(false);
     }
@@ -49,9 +56,15 @@ export default function AreasPage() {
     try {
       const res = await fetch('/kios/api/area-groups');
       const data = await res.json();
-      setAreaGroups(data);
+      if (Array.isArray(data)) {
+        setAreaGroups(data);
+      } else {
+        console.error('Data from /kios/api/area-groups is not an array:', data);
+        setAreaGroups([]);
+      }
     } catch (e) {
       console.error('Lỗi tải danh mục nhóm');
+      setAreaGroups([]);
     }
   };
 

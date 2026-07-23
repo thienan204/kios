@@ -12,6 +12,7 @@ import {
   UsbOutlined,
   VideoCameraOutlined,
   BookOutlined,
+  ApiOutlined,
 } from '@ant-design/icons';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
@@ -54,6 +55,11 @@ export default function AdminLayout({
       key: '/admin/areas',
       icon: <AppstoreOutlined />,
       label: <Link href="/admin/areas">Quản lý Khu vực</Link>,
+    },
+    {
+      key: '/admin/his-config-qr',
+      icon: <ApiOutlined />,
+      label: <Link href="/admin/his-config-qr">Cấu hình API Kiosk QR</Link>,
     },
     {
       key: '/admin/tickets',
